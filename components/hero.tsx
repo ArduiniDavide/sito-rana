@@ -1,0 +1,136 @@
+"use client"
+
+import { useEffect, useRef } from "react"
+import Image from "next/image"
+import { gsap } from "gsap"
+import { AnimatedText } from "@/components/animated-text"
+import { IMAGES } from "@/lib/images"
+
+export function Hero() {
+  const imageRef = useRef<HTMLDivElement>(null)
+  const introRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    if (reduceMotion) {
+      if (introRef.current) gsap.set(introRef.current, { opacity: 1, y: 0 })
+      return
+    }
+
+    let ticking = false
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const y = window.scrollY
+        if (imageRef.current) {
+          gsap.set(imageRef.current, { y: y * 0.35 })
+        }
+        ticking = false
+      })
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+
+    gsap.fromTo(
+      introRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 1.1 },
+    )
+
+    const failSafe = window.setTimeout(() => {
+      if (introRef.current) gsap.set(introRef.current, { opacity: 1, y: 0 })
+    }, 2500)
+
+    return () => {
+      window.clearTimeout(failSafe)
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
+
+  return (
+    <section
+      id="top"
+      className="relative flex min-h-[100svh] w-full items-end overflow-hidden bg-anthracite"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      <div ref={imageRef} className="absolute inset-0 -top-24 h-[calc(100%+6rem)] w-full">
+        <Image
+          src={IMAGES.hero}
+          alt="Famiglia italiana prepara pasta fresca a mano in cucina"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      </div>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(41,39,37,0.55) 0%, rgba(41,39,37,0.15) 35%, rgba(41,39,37,0.35) 65%, rgba(41,39,37,0.92) 100%)",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-anthracite/50 via-transparent to-transparent" />
+
+      <div className="absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-pasta-yellow/20 blur-3xl sm:h-96 sm:w-96" />
+      <div className="absolute -left-16 bottom-24 h-56 w-56 rounded-full bg-tomato-red/25 blur-3xl" />
+
+      <div
+        className="relative z-10 flex w-full flex-col gap-6 px-5 pb-16 sm:gap-8 sm:px-10 sm:pb-24 lg:px-16"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 4rem)" }}
+      >
+        <div className="max-w-4xl">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-cream/25 bg-cream/10 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cream backdrop-blur-sm sm:mb-6 sm:text-xs">
+            Pasta fresca artigianale
+          </span>
+
+          <AnimatedText
+            as="h1"
+            text={"La tradizione italiana\nche si fa a mano, ogni giorno."}
+            splitBy="lines"
+            start="top 100%"
+            className="font-display text-[clamp(2rem,7vw,5.5rem)] font-bold leading-[1.05] tracking-tight text-cream"
+          />
+
+          <div
+            ref={introRef}
+            className="mt-6 flex flex-col gap-6 opacity-0 sm:mt-8 sm:flex-row sm:items-end sm:justify-between sm:gap-8"
+          >
+            <p className="max-w-md text-sm leading-relaxed text-cream/80 sm:text-base sm:text-lg">
+              Ingredienti veri, ricette di famiglia e la cura artigianale di chi crede che il buon cibo unisca le
+              persone attorno a un tavolo.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <a
+                href="#ricette"
+                className="group inline-flex items-center gap-2 rounded-full bg-tomato-red px-6 py-3 text-xs font-semibold text-cream transition-all duration-300 hover:bg-cream hover:text-anthracite sm:px-7 sm:py-3.5 sm:text-sm"
+              >
+                Scopri le ricette
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </a>
+              <a
+                href="#storia"
+                className="inline-flex items-center gap-2 rounded-full border border-cream/40 px-6 py-3 text-xs font-semibold text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10 sm:px-7 sm:py-3.5 sm:text-sm"
+              >
+                La nostra storia
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-cream/70 sm:flex"
+        aria-hidden
+      >
+        <span className="text-[10px] uppercase tracking-[0.3em]">Scorri</span>
+        <span className="h-9 w-px animate-pulse bg-cream/50" />
+      </div>
+    </section>
+  )
+}
