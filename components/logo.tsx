@@ -9,11 +9,11 @@ export function Logo({ className = "", invert = false }: LogoProps) {
   return (
     <span className={`relative block ${className}`}>
       <Image
-        src={invert ? "/images/logo-rana-cream.png" : "/images/logo-rana-blue.png"}
+        src="/images/logo-rana.png"
         alt="Giovanni Rana"
         fill
         priority
-        className="object-contain object-left"
+        className={`object-contain object-left transition-[filter] duration-500 ${invert ? "brightness-0 invert" : ""}`}
       />
     </span>
   )

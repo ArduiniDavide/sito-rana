@@ -4,6 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.blur-word {
+  display: inline-block;
+  opacity: 0;
+  will-change: opacity, filter, transform;
+}
+
+.blur-word-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blur-word {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);

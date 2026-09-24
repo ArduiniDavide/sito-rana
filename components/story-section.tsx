@@ -6,6 +6,7 @@ import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { animate, stagger } from "animejs"
 import { IMAGES } from "@/lib/images"
+import { BlurText } from "@/components/shiny-text"
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger)
@@ -43,6 +44,8 @@ export function StorySection() {
   const trackRef = useRef<HTMLDivElement>(null)
   const mobilePanelRefs = useRef<HTMLDivElement[]>([])
   const [isDesktop, setIsDesktop] = useState(false)
+  const [activePanel, setActivePanel] = useState(0)
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)")
@@ -106,8 +109,10 @@ export function StorySection() {
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           gsap.set(track, { x: -distance * self.progress })
+          setActivePanel(Math.min(PANELS.length - 1, Math.round(self.progress * (PANELS.length - 1))))
         },
       })
+      scrollTriggerRef.current = st
     }
 
     setup()
@@ -120,8 +125,20 @@ export function StorySection() {
     return () => {
       window.removeEventListener("resize", onResize)
       st?.kill()
+      scrollTriggerRef.current = null
     }
   }, [isDesktop])
+
+  const goToPanel = (index: number) => {
+    const trigger = scrollTriggerRef.current
+    if (!trigger) return
+    const progress = index / (PANELS.length - 1)
+    window.scrollTo({
+      top: trigger.start + (trigger.end - trigger.start) * progress,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    })
+    setActivePanel(index)
+  }
 
   if (!isDesktop) {
     return (
@@ -132,7 +149,7 @@ export function StorySection() {
               La nostra storia
             </span>
             <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-cream sm:text-4xl">
-              Quattro capitoli di una famiglia in cucina
+              <BlurText text="Quattro capitoli di una famiglia in cucina" />
             </h2>
           </div>
 
@@ -208,9 +225,18 @@ export function StorySection() {
         ))}
       </div>
 
-      <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2" aria-hidden>
-        {PANELS.map((_, i) => (
-          <span key={i} className="h-1.5 w-1.5 rounded-full bg-cream/40" />
+      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2" aria-label="Seleziona un capitolo della storia">
+        {PANELS.map((panel, i) => (
+          <button
+            key={panel.title}
+            type="button"
+            onClick={() => goToPanel(i)}
+            aria-label={`Vai al capitolo ${i + 1}: ${panel.kicker}`}
+            aria-current={activePanel === i ? "step" : undefined}
+            className="group flex h-8 w-8 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pasta-yellow"
+          >
+            <span className={`block h-2 rounded-full transition-all duration-300 ${activePanel === i ? "w-7 bg-pasta-yellow" : "w-2 bg-cream/45 group-hover:bg-cream/80"}`} />
+          </button>
         ))}
       </div>
     </section>
