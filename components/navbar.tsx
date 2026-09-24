@@ -69,7 +69,7 @@ export function Navbar() {
           <a
             href="#top"
             aria-label="Giovanni Rana, torna alla home"
-            className="group relative flex items-center overflow-hidden rounded-xl focus-visible:outline-none"
+            className="group relative flex items-center overflow-visible rounded-xl focus-visible:outline-none"
           >
             <Logo
               invert={!scrolled}

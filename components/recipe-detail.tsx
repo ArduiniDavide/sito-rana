@@ -22,11 +22,14 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps) {
     lastFocused.current = document.activeElement as HTMLElement
     const scrollY = window.scrollY
     const body = document.body
+    const html = document.documentElement
+    window.__lenis?.stop()
     body.style.position = "fixed"
     body.style.top = `-${scrollY}px`
     body.style.left = "0"
     body.style.right = "0"
     body.style.width = "100%"
+    html.style.overflow = "hidden"
 
     requestAnimationFrame(() => closeButtonRef.current?.focus())
 
@@ -42,7 +45,9 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps) {
       body.style.left = ""
       body.style.right = ""
       body.style.width = ""
+      html.style.overflow = ""
       window.scrollTo(0, scrollY)
+      window.__lenis?.start()
       lastFocused.current?.focus()
     }
   }, [recipe, onClose])
@@ -99,7 +104,8 @@ export function RecipeDetail({ recipe, onClose }: RecipeDetailProps) {
         </button>
 
         <div
-          className="h-full w-full overflow-y-auto overscroll-contain"
+          data-lenis-prevent
+          className="h-full w-full touch-pan-y overflow-y-auto overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="relative h-56 w-full sm:h-80">
