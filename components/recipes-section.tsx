@@ -164,7 +164,7 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
-        className={`mt-10 flex gap-4 overflow-x-auto px-5 pb-4 [scrollbar-width:none] sm:mt-12 sm:gap-6 sm:px-10 lg:px-16 [&::-webkit-scrollbar]:hidden ${
+        className={`mt-10 flex gap-4 overflow-x-auto px-5 pb-4 pl-10 sm:mt-12 sm:gap-6 sm:px-10 sm:pl-20 lg:px-16 lg:pl-28 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
           isDown ? "cursor-grabbing" : "cursor-grab"
         }`}
         style={{ scrollSnapType: isDown ? "none" : "x proximity", WebkitOverflowScrolling: "touch" }}

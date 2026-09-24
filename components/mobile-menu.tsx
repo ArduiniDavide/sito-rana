@@ -100,7 +100,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         </svg>
       </button>
 
-      <nav className="flex flex-col items-center gap-6" aria-label="Navigazione mobile">
+      <nav className="flex flex-col items-center gap-4" aria-label="Navigazione mobile">
         {LINKS.map((link, i) => (
           <a
             key={link.href}
@@ -109,8 +109,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             }}
             href={link.href}
             onClick={onClose}
-            className="font-display text-3xl font-semibold tracking-tight text-cream transition-colors hover:text-pasta-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pasta-yellow/50 rounded-lg sm:text-5xl"
+            className="group relative overflow-hidden rounded-2xl px-8 py-3 font-display text-3xl font-semibold tracking-tight text-cream transition-colors hover:text-anthracite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pasta-yellow/50 sm:text-5xl"
           >
+            <span className="absolute inset-0 -z-10 origin-bottom scale-y-0 rounded-2xl bg-pasta-yellow transition-transform duration-300 ease-out group-hover:scale-y-100" />
             {link.label}
           </a>
         ))}

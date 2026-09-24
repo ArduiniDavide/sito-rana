@@ -13,6 +13,7 @@ const LINKS = [
 
 export function Navbar() {
   const headerRef = useRef<HTMLElement>(null)
+  const ctaRef = useRef<HTMLAnchorElement>(null)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -42,65 +43,94 @@ export function Navbar() {
     }
   }, [])
 
+  const onCtaMove = (e: React.MouseEvent) => {
+    const el = ctaRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    el.style.setProperty("--spot-x", `${e.clientX - rect.left}px`)
+    el.style.setProperty("--spot-y", `${e.clientY - rect.top}px`)
+  }
+
   return (
     <>
       <header
         ref={headerRef}
-        className={`fixed inset-x-0 top-0 z-50 flex justify-center transition-all duration-500 ${
-          scrolled ? "pt-2 sm:pt-4" : "pt-0"
-        }`}
-        style={{ paddingTop: scrolled ? "max(env(safe-area-inset-top), 0.5rem)" : "env(safe-area-inset-top)" }}
+        className="fixed inset-x-0 top-0 z-50 flex justify-center"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div
           className={`flex w-full items-center justify-between transition-all duration-500 ease-out ${
             scrolled
-              ? "mx-3 max-w-4xl rounded-full border border-anthracite/10 bg-cream/85 px-4 py-2.5 shadow-lg shadow-anthracite/10 backdrop-blur-xl sm:mx-4 sm:px-7"
-              : "max-w-none rounded-none border-transparent bg-transparent px-4 py-4 sm:px-10 sm:py-7"
+              ? "mt-3 mx-3 max-w-4xl rounded-2xl border border-anthracite/10 bg-cream/80 px-5 py-3 shadow-lg shadow-anthracite/10 backdrop-blur-xl sm:mx-4 sm:px-7"
+              : "max-w-none px-5 py-5 sm:px-10 sm:py-7"
           }`}
         >
+          {/* Logo */}
           <a
             href="#top"
             aria-label="Giovanni Rana, torna alla home"
-            className="flex items-center focus-visible:outline-none"
+            className="group relative flex items-center overflow-hidden rounded-xl focus-visible:outline-none"
           >
             <Logo
               className={`h-8 w-24 transition-all duration-500 sm:h-10 sm:w-32 ${
-                scrolled ? "shadow-md shadow-anthracite/10" : "drop-shadow-md"
+                scrolled ? "drop-shadow-sm" : "drop-shadow-md"
               }`}
             />
           </a>
 
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Navigazione principale">
+          {/* Desktop nav with animated underline links */}
+          <nav className="hidden items-center gap-7 md:flex" aria-label="Navigazione principale">
             {LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40 rounded ${
-                  scrolled ? "text-anthracite hover:text-tomato-red" : "text-cream hover:text-pasta-yellow"
-                }`}
+                className="group relative text-sm font-medium tracking-wide focus-visible:outline-none"
               >
-                {link.label}
+                <span
+                  className={`transition-colors ${
+                    scrolled
+                      ? "text-anthracite group-hover:text-tomato-red"
+                      : "text-cream group-hover:text-pasta-yellow"
+                  }`}
+                >
+                  {link.label}
+                </span>
+                <span
+                  className={`absolute -bottom-1 left-0 h-[2px] w-0 rounded-full transition-all duration-300 ease-out group-hover:w-full ${
+                    scrolled ? "bg-tomato-red" : "bg-pasta-yellow"
+                  }`}
+                />
               </a>
             ))}
+
+            {/* CTA with spotlight effect */}
             <a
+              ref={ctaRef}
               href="#ricette"
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40 ${
+              onMouseMove={onCtaMove}
+              className={`group relative overflow-hidden rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 focus-visible:outline-none ${
                 scrolled
-                  ? "bg-tomato-red text-cream hover:bg-anthracite"
-                  : "bg-cream text-anthracite hover:bg-pasta-yellow"
+                  ? "bg-tomato-red text-cream hover:shadow-lg hover:shadow-tomato-red/30"
+                  : "bg-cream text-anthracite hover:shadow-lg hover:shadow-cream/20"
               }`}
+              style={{
+                backgroundImage: scrolled
+                  ? "radial-gradient(120px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,255,255,0.25), transparent 70%)"
+                  : "radial-gradient(120px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(201,43,43,0.15), transparent 70%)",
+              }}
             >
-              Scopri le ricette
+              <span className="relative z-10">Scopri le ricette</span>
             </a>
           </nav>
 
+          {/* Mobile hamburger */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? "Chiudi il menu" : "Apri il menu"}
-            className="relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-[6px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/60 md:hidden"
+            className="relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-[6px] rounded-lg focus-visible:outline-none md:hidden"
           >
             <span
               className={`h-[2px] w-6 rounded-full transition-all duration-300 ease-out ${
