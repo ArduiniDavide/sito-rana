@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { animate, stagger } from "animejs"
 import { IMAGES } from "@/lib/images"
 
 if (typeof window !== "undefined") {
@@ -40,6 +41,7 @@ const PANELS = [
 export function StorySection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  const mobilePanelRefs = useRef<HTMLDivElement[]>([])
   const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
@@ -49,6 +51,33 @@ export function StorySection() {
     mq.addEventListener("change", update)
     return () => mq.removeEventListener("change", update)
   }, [])
+
+  useEffect(() => {
+    if (isDesktop) return
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        if (reduceMotion) {
+          mobilePanelRefs.current.forEach((el) => el && (el.style.opacity = "1"))
+        } else {
+          animate(mobilePanelRefs.current.filter(Boolean), {
+            opacity: [0, 1],
+            translateY: [48, 0],
+            delay: stagger(140),
+            duration: 1000,
+            ease: "out(4)",
+          })
+        }
+        observer.disconnect()
+      },
+      { rootMargin: "0px 0px -15% 0px" },
+    )
+
+    mobilePanelRefs.current.filter(Boolean).forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [isDesktop])
 
   useEffect(() => {
     if (!isDesktop) return
@@ -108,8 +137,12 @@ export function StorySection() {
           </div>
 
           <div className="flex flex-col gap-12">
-            {PANELS.map((panel) => (
-              <article key={panel.title} className="flex flex-col gap-5">
+            {PANELS.map((panel, i) => (
+              <article
+                key={panel.title}
+                ref={(el) => { if (el) mobilePanelRefs.current[i] = el }}
+                className="flex flex-col gap-5 opacity-0"
+              >
                 <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl">
                   <Image
                     src={panel.image}

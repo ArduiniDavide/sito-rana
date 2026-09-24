@@ -1,12 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { gsap } from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger)
-}
+import { animate, stagger } from "animejs"
 
 type AnimatedTextProps = {
   text: string
@@ -25,53 +20,51 @@ export function AnimatedText({
   delay = 0,
   start = "top 85%",
 }: AnimatedTextProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
+    const pieces = container.querySelectorAll<HTMLElement>("[data-piece]")
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const pieces = container.querySelectorAll<HTMLSpanElement>("[data-piece]")
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
 
-    if (reduceMotion) {
-      gsap.set(pieces, { opacity: 1, y: 0 })
-      return
-    }
+        if (reduceMotion) {
+          pieces.forEach((piece) => {
+            piece.style.opacity = "1"
+            piece.style.transform = "translateY(0)"
+          })
+        } else {
+          animate(pieces, {
+            opacity: [0, 1],
+            translateY: [splitBy === "lines" ? "100%" : 24, 0],
+            delay: delay * 1000 + stagger(45),
+            duration: 950,
+            ease: "out(4)",
+          })
+        }
 
-    gsap.set(pieces, { opacity: 0, y: splitBy === "lines" ? "100%" : 24 })
-
-    const tween = gsap.to(pieces, {
-      opacity: 1,
-      y: 0,
-      duration: 0.9,
-      ease: "power3.out",
-      stagger: 0.045,
-      delay,
-      scrollTrigger: {
-        trigger: container,
-        start,
-        toggleActions: "play none none none",
+        observer.disconnect()
       },
+      { rootMargin: start.replace("top ", "0px 0px -") },
+    )
+
+    pieces.forEach((piece) => {
+      piece.style.opacity = "0"
+      piece.style.transform = `translateY(${splitBy === "lines" ? "100%" : "24px"})`
     })
+    observer.observe(container)
 
-    ScrollTrigger.refresh()
-
-    const failSafe = window.setTimeout(() => {
-      gsap.set(pieces, { opacity: 1, y: 0 })
-    }, 2000)
-
-    return () => {
-      window.clearTimeout(failSafe)
-      tween.scrollTrigger?.kill()
-      tween.kill()
-    }
+    return () => observer.disconnect()
   }, [delay, splitBy, start])
 
   const units = splitBy === "words" ? text.split(" ") : text.split("\n")
 
   return (
-    <Tag ref={containerRef as never} className={className}>
+    <Tag ref={containerRef} className={className}>
       {units.map((unit, i) => (
         <span key={i} className="inline-block overflow-hidden">
           <span data-piece className="inline-block will-change-transform">

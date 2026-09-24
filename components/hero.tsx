@@ -3,18 +3,25 @@
 import { useEffect, useRef } from "react"
 import Image from "next/image"
 import { gsap } from "gsap"
+import { animate, stagger } from "animejs"
 import { AnimatedText } from "@/components/animated-text"
 import { IMAGES } from "@/lib/images"
 
 export function Hero() {
   const imageRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const introRef = useRef<HTMLDivElement>(null)
+  const badgeRef = useRef<HTMLSpanElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     if (reduceMotion) {
       if (introRef.current) gsap.set(introRef.current, { opacity: 1, y: 0 })
+      if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 1, y: 0 })
+      if (ctaRef.current) gsap.set(ctaRef.current, { opacity: 1, y: 0 })
+      if (overlayRef.current) gsap.set(overlayRef.current, { opacity: 1 })
       return
     }
 
@@ -24,27 +31,34 @@ export function Hero() {
       ticking = true
       requestAnimationFrame(() => {
         const y = window.scrollY
-        if (imageRef.current) {
-          gsap.set(imageRef.current, { y: y * 0.35 })
-        }
+        if (imageRef.current) gsap.set(imageRef.current, { y: y * 0.35 })
+        if (overlayRef.current) gsap.set(overlayRef.current, { opacity: Math.min(1, y / 600) })
         ticking = false
       })
     }
     window.addEventListener("scroll", onScroll, { passive: true })
 
-    gsap.fromTo(
-      introRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 1.1 },
+    const tl: ReturnType<typeof animate> | undefined = animate(
+      [badgeRef.current, introRef.current, ctaRef.current].filter(Boolean) as HTMLElement[],
+      {
+        opacity: [0, 1],
+        translateY: [24, 0],
+        delay: stagger([600, 900, 1100]),
+        duration: 1100,
+        ease: "out(4)",
+      },
     )
 
     const failSafe = window.setTimeout(() => {
       if (introRef.current) gsap.set(introRef.current, { opacity: 1, y: 0 })
-    }, 2500)
+      if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 1, y: 0 })
+      if (ctaRef.current) gsap.set(ctaRef.current, { opacity: 1, y: 0 })
+    }, 3000)
 
     return () => {
       window.clearTimeout(failSafe)
       window.removeEventListener("scroll", onScroll)
+      tl?.pause()
     }
   }, [])
 
@@ -66,7 +80,8 @@ export function Hero() {
       </div>
 
       <div
-        className="absolute inset-0"
+        ref={overlayRef}
+        className="absolute inset-0 opacity-0"
         style={{
           background:
             "linear-gradient(180deg, rgba(41,39,37,0.55) 0%, rgba(41,39,37,0.15) 35%, rgba(41,39,37,0.35) 65%, rgba(41,39,37,0.92) 100%)",
@@ -82,7 +97,10 @@ export function Hero() {
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 4rem)" }}
       >
         <div className="max-w-4xl">
-          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-cream/25 bg-cream/10 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cream backdrop-blur-sm sm:mb-6 sm:text-xs">
+          <span
+            ref={badgeRef}
+            className="mb-5 inline-flex items-center gap-2 rounded-full border border-cream/25 bg-cream/10 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cream backdrop-blur-sm opacity-0 sm:mb-6 sm:text-xs"
+          >
             Pasta fresca artigianale
           </span>
 
@@ -103,7 +121,7 @@ export function Hero() {
               persone attorno a un tavolo.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <div ref={ctaRef} className="flex flex-wrap items-center gap-3 opacity-0 sm:gap-4">
               <a
                 href="#ricette"
                 className="group inline-flex items-center gap-2 rounded-full bg-tomato-red px-6 py-3 text-xs font-semibold text-cream transition-all duration-300 hover:bg-cream hover:text-anthracite sm:px-7 sm:py-3.5 sm:text-sm"

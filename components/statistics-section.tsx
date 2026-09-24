@@ -2,14 +2,9 @@
 
 import { useEffect, useRef } from "react"
 import Image from "next/image"
-import { gsap } from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { animate, stagger, createTimer } from "animejs"
 import { AnimatedText } from "@/components/animated-text"
 import { IMAGES } from "@/lib/images"
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger)
-}
 
 const STATS = [
   { value: 1962, suffix: "", label: "L'anno in cui è nata la prima pasta fresca Rana", isYear: true },
@@ -20,6 +15,7 @@ const STATS = [
 
 export function StatisticsSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<HTMLDivElement[]>([])
   const numberRefs = useRef<HTMLSpanElement[]>([])
 
   useEffect(() => {
@@ -28,34 +24,64 @@ export function StatisticsSection() {
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-    const triggers = STATS.map((stat, i) => {
-      const el = numberRefs.current[i]
-      if (!el) return undefined
+    const cardObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
 
-      if (reduceMotion) {
-        el.textContent = `${stat.value}${stat.suffix}`
-        return undefined
-      }
+        if (reduceMotion) {
+          cardRefs.current.forEach((card) => {
+            if (card) card.style.opacity = "1"
+          })
+        } else {
+          animate(cardRefs.current.filter(Boolean), {
+            opacity: [0, 1],
+            translateY: [40, 0],
+            delay: stagger(120),
+            duration: 900,
+            ease: "out(4)",
+          })
+        }
+        cardObserver.disconnect()
+      },
+      { rootMargin: "0px 0px -15% 0px" },
+    )
 
-      const counter = { val: 0 }
-      return ScrollTrigger.create({
-        trigger: el,
-        start: "top 88%",
-        once: true,
-        onEnter: () => {
-          gsap.to(counter, {
+    const numberObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+
+        STATS.forEach((stat, i) => {
+          const el = numberRefs.current[i]
+          if (!el) return
+
+          if (reduceMotion) {
+            el.textContent = `${stat.value}${stat.suffix}`
+            return
+          }
+
+          const counter = { val: 0 }
+          animate(counter, {
             val: stat.value,
-            duration: 1.8,
-            ease: "power2.out",
+            duration: 2000,
+            ease: "out(3)",
             onUpdate: () => {
               el.textContent = `${Math.round(counter.val)}${stat.suffix}`
             },
           })
-        },
-      })
-    })
+        })
 
-    return () => triggers.forEach((t) => t?.kill())
+        numberObserver.disconnect()
+      },
+      { rootMargin: "0px 0px -20% 0px" },
+    )
+
+    cardObserver.observe(section)
+    numberObserver.observe(section)
+
+    return () => {
+      cardObserver.disconnect()
+      numberObserver.disconnect()
+    }
   }, [])
 
   return (
@@ -86,7 +112,13 @@ export function StatisticsSection() {
 
         <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {STATS.map((stat, i) => (
-            <div key={stat.label} className="border-t border-cream/15 pt-6">
+            <div
+              key={stat.label}
+              ref={(el) => {
+                if (el) cardRefs.current[i] = el
+              }}
+              className="border-t border-cream/15 pt-6 opacity-0"
+            >
               <span
                 ref={(el) => {
                   if (el) numberRefs.current[i] = el

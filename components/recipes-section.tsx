@@ -1,8 +1,9 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { ScrollToPlugin } from "gsap/ScrollToPlugin"
+import { animate, stagger } from "animejs"
 import { recipes } from "@/lib/recipes"
 import { RecipeCard } from "@/components/recipe-card"
 import { AnimatedText } from "@/components/animated-text"
@@ -17,8 +18,34 @@ type RecipesSectionProps = {
 
 export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<HTMLDivElement[]>([])
   const [isDown, setIsDown] = useState(false)
   const dragState = useRef({ startX: 0, scrollLeft: 0, moved: false })
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        if (reduceMotion) {
+          cardRefs.current.forEach((el) => el && (el.style.opacity = "1"))
+        } else {
+          animate(cardRefs.current.filter(Boolean), {
+            opacity: [0, 1],
+            translateY: [50, 0],
+            delay: stagger(90),
+            duration: 850,
+            ease: "out(4)",
+          })
+        }
+        observer.disconnect()
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    )
+
+    cardRefs.current.filter(Boolean).forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   const scrollByAmount = (dir: 1 | -1) => {
     const el = scrollerRef.current
@@ -118,8 +145,13 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
         }`}
         style={{ scrollSnapType: isDown ? "none" : "x proximity", WebkitOverflowScrolling: "touch" }}
       >
-        {recipes.map((recipe) => (
-          <div key={recipe.slug} style={{ scrollSnapAlign: "start" }}>
+        {recipes.map((recipe, i) => (
+          <div
+            key={recipe.slug}
+            ref={(el) => { if (el) cardRefs.current[i] = el }}
+            className="opacity-0"
+            style={{ scrollSnapAlign: "start" }}
+          >
             <RecipeCard
               recipe={recipe}
               onOpen={(slug) => {

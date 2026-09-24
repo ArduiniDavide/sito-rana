@@ -2,7 +2,6 @@ import Image from "next/image"
 
 type LogoProps = {
   className?: string
-  /** when true, the cream version is rendered for dark backgrounds */
   invert?: boolean
 }
 
@@ -10,11 +9,11 @@ export function Logo({ className = "", invert = false }: LogoProps) {
   return (
     <span className={`relative block ${className}`}>
       <Image
-        src={invert ? "/images/logo-rana-cream.png" : "/images/logo-rana-blue.png"}
+        src="/images/image.png"
         alt="Giovanni Rana"
         fill
         priority
-        className="object-contain object-left"
+        className={`object-contain object-left ${invert ? "brightness-0 invert" : ""}`}
       />
     </span>
   )

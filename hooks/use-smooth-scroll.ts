@@ -30,9 +30,9 @@ export function useSmoothScroll() {
       }
 
       gsap.to(window, {
-        scrollTo: { y: el, offsetY: 0 },
-        duration: 1.2,
-        ease: "power3.inOut",
+        scrollTo: { y: el, offsetY: 0, autoKill: true },
+        duration: 1.6,
+        ease: "power2.inOut",
       })
     }
 
