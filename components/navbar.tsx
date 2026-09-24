@@ -72,6 +72,7 @@ export function Navbar() {
             className="group relative flex items-center overflow-hidden rounded-xl focus-visible:outline-none"
           >
             <Logo
+              invert={!scrolled}
               className={`h-8 w-24 transition-all duration-500 sm:h-10 sm:w-32 ${
                 scrolled ? "drop-shadow-sm" : "drop-shadow-md"
               }`}
