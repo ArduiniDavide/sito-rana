@@ -86,14 +86,14 @@ export function ConsentPopup() {
         <button
           type="button"
           onClick={() => dismiss(true)}
-          className="flex-1 rounded-full bg-tomato-red px-4 py-2.5 text-xs font-semibold text-cream transition-colors hover:bg-anthracite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato-red/40"
+          className="flex-1 cursor-pointer rounded-full bg-tomato-red px-4 py-2.5 text-xs font-semibold text-cream transition-colors hover:bg-anthracite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato-red/40"
         >
           Accetta
         </button>
         <button
           type="button"
           onClick={() => dismiss(false)}
-          className="flex-1 rounded-full border border-anthracite/20 px-4 py-2.5 text-xs font-semibold text-anthracite transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anthracite/20"
+          className="flex-1 cursor-pointer rounded-full border border-anthracite/20 px-4 py-2.5 text-xs font-semibold text-anthracite transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anthracite/20"
         >
           Rifiuta
         </button>

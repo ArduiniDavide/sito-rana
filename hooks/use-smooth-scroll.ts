@@ -1,12 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { gsap } from "gsap"
-import { ScrollToPlugin } from "gsap/ScrollToPlugin"
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollToPlugin)
-}
 
 export function useSmoothScroll() {
   useEffect(() => {
@@ -29,11 +23,12 @@ export function useSmoothScroll() {
         return
       }
 
-      gsap.to(window, {
-        scrollTo: { y: el, offsetY: 0, autoKill: true },
-        duration: 1.6,
-        ease: "power2.inOut",
-      })
+      const lenis = (window as unknown as { __lenis?: { scrollTo: (target: Element | number, opts?: object) => void } }).__lenis
+      if (lenis) {
+        lenis.scrollTo(el, { offset: 0, duration: 1.6 })
+      } else {
+        el.scrollIntoView({ behavior: "smooth" })
+      }
     }
 
     document.addEventListener("click", handleClick)

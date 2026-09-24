@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Dancing_Script, Manrope, Playfair_Display } from 'next/font/google'
 import './globals.css'
+import { SmoothScroll } from '@/components/smooth-scroll-provider'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -118,7 +119,9 @@ export default function RootLayout({
       className={`${playfair.variable} ${manrope.variable} ${dancingScript.variable}`}
     >
       <body className="antialiased bg-cream text-anthracite font-sans">
-        {children}
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

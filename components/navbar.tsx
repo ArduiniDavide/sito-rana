@@ -61,7 +61,7 @@ export function Navbar() {
           <a
             href="#top"
             aria-label="Giovanni Rana, torna alla home"
-            className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/60 focus-visible:ring-offset-2 focus-visible:ring-offset-anthracite rounded-lg"
+            className="flex items-center focus-visible:outline-none"
           >
             <Logo
               className={`h-8 w-24 transition-all duration-500 sm:h-10 sm:w-32 ${

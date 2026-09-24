@@ -20,7 +20,7 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<HTMLDivElement[]>([])
   const [isDown, setIsDown] = useState(false)
-  const dragState = useRef({ startX: 0, scrollLeft: 0, moved: false })
+  const dragState = useRef({ startX: 0, scrollLeft: 0, moved: false, lastX: 0, velocity: 0, rafId: 0 })
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -47,13 +47,28 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
     return () => observer.disconnect()
   }, [])
 
+  const applyMomentum = (velocity: number) => {
+    const el = scrollerRef.current
+    if (!el) return
+
+    const decay = 0.95
+    const step = () => {
+      if (Math.abs(velocity) < 0.5) return
+      el.scrollLeft -= velocity
+      velocity *= decay
+      dragState.current.rafId = requestAnimationFrame(step)
+    }
+    dragState.current.rafId = requestAnimationFrame(step)
+  }
+
   const scrollByAmount = (dir: 1 | -1) => {
     const el = scrollerRef.current
     if (!el) return
+    cancelAnimationFrame(dragState.current.rafId)
     const target = el.scrollLeft + dir * el.clientWidth * 0.85
     gsap.to(el, {
       scrollTo: { x: target },
-      duration: 0.8,
+      duration: 1.0,
       ease: "power3.out",
     })
   }
@@ -61,9 +76,10 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
   const onPointerDown = (e: React.PointerEvent) => {
     const el = scrollerRef.current
     if (!el) return
+    cancelAnimationFrame(dragState.current.rafId)
     gsap.killTweensOf(el)
     setIsDown(true)
-    dragState.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false }
+    dragState.current = { startX: e.clientX, scrollLeft: el.scrollLeft, moved: false, lastX: e.clientX, velocity: 0, rafId: 0 }
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -73,9 +89,17 @@ export function RecipesSection({ onOpenRecipe }: RecipesSectionProps) {
     const delta = e.clientX - dragState.current.startX
     if (Math.abs(delta) > 4) dragState.current.moved = true
     el.scrollLeft = dragState.current.scrollLeft - delta
+    dragState.current.velocity = (e.clientX - dragState.current.lastX) * 0.8
+    dragState.current.lastX = e.clientX
   }
 
-  const endDrag = () => setIsDown(false)
+  const endDrag = () => {
+    if (!isDown) return
+    setIsDown(false)
+    if (Math.abs(dragState.current.velocity) > 1) {
+      applyMomentum(dragState.current.velocity)
+    }
+  }
 
   return (
     <section id="ricette" className="relative overflow-hidden bg-cream py-20 sm:py-24 lg:py-32">
