@@ -41,17 +41,22 @@ export function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 py-8 text-xs text-cream/50 sm:flex-row">
           <p>© {new Date().getFullYear()} Giovanni Rana. Tutti i diritti riservati.</p>
-          <p>
-            Creato da{" "}
-            <a
-              href="https://itsdavlooo.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-cream/80 underline underline-offset-2 transition-colors hover:text-pasta-yellow"
-            >
-              Davide Arduini
-            </a>
-          </p>
+          <div className="flex flex-col items-center gap-2 sm:items-end">
+            <p>
+              Creato da{" "}
+              <a
+                href="https://itsdavlooo.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-cream/80 underline underline-offset-2 transition-colors hover:text-pasta-yellow"
+              >
+                Davide Arduini
+              </a>
+            </p>
+            <p className="text-cream/40">
+              Sito tributo non ufficiale, realizzato a scopo dimostrativo. Giovanni Rana è un marchio registrato dei rispettivi proprietari.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
