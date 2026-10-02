@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, Maximize, Minimize, Home,
   Lightbulb, Bot, GitBranch, Code2, Database,
   Link2, Plug, Bug, Play, Wrench, Pencil, BarChart3,
-  CheckSquare, Brain, Target, Cpu, Layers,
+  Brain, Target, Cpu, Layers,
 } from "lucide-react"
 import { Logo } from "@/components/logo"
 
@@ -279,17 +279,6 @@ function FlowDiagram({ steps }: { steps: { title: string; desc: string }[] }) {
   )
 }
 
-function ChecklistItem({ label }: { label: string }) {
-  return (
-    <li className="flex items-start gap-3 text-xs leading-relaxed sm:text-sm">
-      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 border-basil-green text-basil-green text-xs">
-        &#10003;
-      </span>
-      <span className="opacity-85">{label}</span>
-    </li>
-  )
-}
-
 function EvalRow({ area, weight, what }: { area: string; weight: string; what: string }) {
   return (
     <tr className="border-b border-current/10">
@@ -310,26 +299,31 @@ const SLIDES: Slide[] = [
     icon: Target,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-5">
-        <p className="text-base leading-relaxed opacity-80 sm:text-lg max-w-2xl">
-          Sito web su Giovanni Rana, fatto con l'aiuto dell'AI.
-          Presentazione del progetto di informatica.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "anime.js"].map((t) => (
-            <span key={t} className="rounded-full border border-cream/20 bg-cream/10 px-3 py-1.5 text-xs font-medium sm:text-sm">
-              {t}
-            </span>
-          ))}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-4 flex-1">
+          <p className="text-base leading-relaxed opacity-80 sm:text-lg max-w-2xl">
+            Sito web su Giovanni Rana, fatto con l'aiuto dell'AI.
+            Presentazione del progetto di informatica.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "anime.js"].map((t) => (
+              <span key={t} className="rounded-full border border-cream/20 bg-cream/10 px-3 py-1.5 text-xs font-medium sm:text-sm">
+                {t}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm opacity-50 mt-2">
+            Sito tributo non ufficiale, fatto per la scuola.
+            Giovanni Rana è un marchio dei rispettivi proprietari.
+          </p>
+          <p className="text-sm opacity-60">Fatto da Davide Arduini</p>
+          <p className="text-xs opacity-40 mt-4">
+            Frecce ← → per cambiare slide · F per schermo intero
+          </p>
         </div>
-        <p className="text-sm opacity-50 mt-2">
-          Sito tributo non ufficiale, fatto per la scuola.
-          Giovanni Rana è un marchio dei rispettivi proprietari.
-        </p>
-        <p className="text-sm opacity-60">Fatto da Davide Arduini</p>
-        <p className="text-xs opacity-40 mt-4">
-          Frecce ← → per cambiare slide · F per schermo intero
-        </p>
+        <div className="hidden sm:block flex-shrink-0">
+          <img src="/images/logo-rana-cream.png" alt="Giovanni Rana" className="w-40 h-auto opacity-80 lg:w-52" />
+        </div>
       </div>
     ),
   },
@@ -360,14 +354,15 @@ const SLIDES: Slide[] = [
     content: (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { t: "Hero", d: "Immagine grande con titolo che appare piano piano" },
-          { t: "Storia", d: "4 capitoli che si scorrono di lato sul desktop" },
+          { t: "Hero", d: "Immagine grande con titolo che appare piano piano", img: "/images/hero-bg.png" },
+          { t: "Storia", d: "4 capitoli che si scorrono di lato sul desktop", img: "/images/story-1.png" },
           { t: "Numeri", d: "Contatori che partono da 0 e arrivano al valore" },
-          { t: "Ricette", d: "6 ricette in un carousel che puoi trascinare" },
+          { t: "Ricette", d: "6 ricette in un carousel che puoi trascinare", img: "/images/recipe-gnocchi.png" },
           { t: "Dettaglio", d: "Cliccando una ricetta si apre una finestra con ingredienti e passaggi" },
           { t: "Menu", d: "Menu mobile animato e barra in alto che cambia colore" },
         ].map((f, i) => (
           <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+            {f.img && <img src={f.img} alt={f.t} className="mb-2 h-12 w-full rounded-lg object-cover opacity-70" />}
             <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{f.t}</h3>
             <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{f.d}</p>
           </div>
@@ -456,14 +451,15 @@ const SLIDES: Slide[] = [
     content: (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { t: "Hero", d: "La prima cosa che vedi: foto grande + titolo" },
-          { t: "Storia", d: "4 capitoli della storia dell'azienda" },
+          { t: "Hero", d: "La prima cosa che vedi: foto grande + titolo", img: "/images/hero-bg.png" },
+          { t: "Storia", d: "4 capitoli della storia dell'azienda", img: "/images/story-1.png" },
           { t: "Numeri", d: "4 statistiche con contatori animati" },
-          { t: "Ricette", d: "Carousel con 6 ricette trascinabili" },
+          { t: "Ricette", d: "Carousel con 6 ricette trascinabili", img: "/images/recipe-gnocchi.png" },
           { t: "Dettaglio ricetta", d: "Finestra con ingredienti e passaggi" },
           { t: "Footer", d: "Link in basso + pagine privacy e termini" },
         ].map((s, i) => (
           <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+            {s.img && <img src={s.img} alt={s.t} className="mb-2 h-12 w-full rounded-lg object-cover opacity-70" />}
             <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{s.t}</h3>
             <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{s.d}</p>
           </div>
@@ -506,15 +502,18 @@ const SLIDES: Slide[] = [
     content: (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {[
-          { t: "TypeScript", d: "Il linguaggio con cui ho scritto tutto. Aiuta a non fare errori." },
-          { t: "React 19", d: "La libreria per fare i componenti riutilizzabili del sito." },
-          { t: "Next.js 16", d: "Il framework che gestisce le pagine, le immagini e mette online il sito." },
-          { t: "Tailwind CSS v4", d: "Serve a dare lo stile ai componenti con classi prefatte." },
-          { t: "GSAP", d: "Libreria per animazioni: parallasse, scroll orizzontale, transizioni." },
-          { t: "anime.js", d: "Un'altra libreria per animare: contatori e comparsa delle card." },
+          { t: "TypeScript", d: "Il linguaggio con cui ho scritto tutto. Aiuta a non fare errori.", logo: "https://cdn.simpleicons.org/typescript/3178C6" },
+          { t: "React 19", d: "La libreria per fare i componenti riutilizzabili del sito.", logo: "https://cdn.simpleicons.org/react/61DAFB" },
+          { t: "Next.js 16", d: "Il framework che gestisce le pagine, le immagini e mette online il sito.", logo: "https://cdn.simpleicons.org/nextdotjs/FFFFFF" },
+          { t: "Tailwind CSS v4", d: "Serve a dare lo stile ai componenti con classi prefatte.", logo: "https://cdn.simpleicons.org/tailwindcss/06B6D4" },
+          { t: "GSAP", d: "Libreria per animazioni: parallasse, scroll orizzontale, transizioni.", logo: "https://cdn.simpleicons.org/greensock/88CE02" },
+          { t: "anime.js", d: "Un'altra libreria per animare: contatori e comparsa delle card.", logo: null },
         ].map((t, i) => (
           <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
-            <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{t.t}</h3>
+            <div className="flex items-center gap-2 mb-1">
+              {t.logo && <img src={t.logo} alt={t.t} className="h-5 w-5 flex-shrink-0" />}
+              <h3 className="font-display text-sm font-semibold text-pasta-yellow sm:text-base">{t.t}</h3>
+            </div>
             <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{t.d}</p>
           </div>
         ))}
@@ -531,15 +530,18 @@ const SLIDES: Slide[] = [
     content: (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {[
-          { t: "Lenis", d: "Rende lo scroll della pagina fluido invece di quello di default." },
-          { t: "lucide-react", d: "Set di icone leggere usate nell'interfaccia." },
-          { t: "Netlify", d: "Piattaforma online dove il sito viene pubblicato." },
-          { t: "Playfair Display", d: "Font per i titoli, dà un look elegante." },
-          { t: "Manrope", d: "Font per il testo normale, facile da leggere." },
-          { t: "Dancing Script", d: "Font per il logo, stile manoscritto." },
+          { t: "Lenis", d: "Rende lo scroll della pagina fluido invece di quello di default.", logo: null },
+          { t: "lucide-react", d: "Set di icone leggere usate nell'interfaccia.", logo: "https://cdn.simpleicons.org/lucide/000000" },
+          { t: "Netlify", d: "Piattaforma online dove il sito viene pubblicato.", logo: "https://cdn.simpleicons.org/netlify/00C7B7" },
+          { t: "Playfair Display", d: "Font per i titoli, dà un look elegante.", logo: null },
+          { t: "Manrope", d: "Font per il testo normale, facile da leggere.", logo: null },
+          { t: "Dancing Script", d: "Font per il logo, stile manoscritto.", logo: null },
         ].map((t, i) => (
           <div key={i} className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-4">
-            <h3 className="font-display text-sm font-semibold text-tomato-red mb-1 sm:text-base">{t.t}</h3>
+            <div className="flex items-center gap-2 mb-1">
+              {t.logo && <img src={t.logo} alt={t.t} className="h-5 w-5 flex-shrink-0" />}
+              <h3 className="font-display text-sm font-semibold text-tomato-red sm:text-base">{t.t}</h3>
+            </div>
             <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{t.d}</p>
           </div>
         ))}
@@ -761,24 +763,29 @@ const SLIDES: Slide[] = [
     icon: Play,
     theme: "light",
     content: (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {[
-          "Aprire il sito e mostrare l'hero animato",
-          "Scorrere fino alla storia e mostrare lo scroll di lato",
-          "Arrivare ai numeri e far vedere i contatori",
-          "Andare alle ricette e trascinare le card",
-          "Cliccare una ricetta e mostrare ingredienti e passaggi",
-          "Chiudere con Escape e far vedere che lo scroll torna",
-          "Aprire il menu mobile",
-          "Mostrare le pagine privacy e termini",
-        ].map((step, i) => (
-          <div key={i} className="flex items-start gap-3 rounded-2xl border border-anthracite/10 bg-anthracite/5 p-3">
-            <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-sm font-bold text-anthracite">
-              {i + 1}
-            </span>
-            <span className="text-xs leading-relaxed opacity-85 sm:text-sm">{step}</span>
-          </div>
-        ))}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="hidden sm:block flex-shrink-0">
+          <img src="/images/recipe-tortellini.png" alt="Ricetta" className="h-44 w-44 rounded-2xl object-cover opacity-80" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 flex-1">
+          {[
+            "Aprire il sito e mostrare l'hero animato",
+            "Scorrere fino alla storia e mostrare lo scroll di lato",
+            "Arrivare ai numeri e far vedere i contatori",
+            "Andare alle ricette e trascinare le card",
+            "Cliccare una ricetta e mostrare ingredienti e passaggi",
+            "Chiudere con Escape e far vedere che lo scroll torna",
+            "Aprire il menu mobile",
+            "Mostrare le pagine privacy e termini",
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-2xl border border-anthracite/10 bg-anthracite/5 p-3">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-sm font-bold text-anthracite">
+                {i + 1}
+              </span>
+              <span className="text-xs leading-relaxed opacity-85 sm:text-sm">{step}</span>
+            </div>
+          ))}
+        </div>
       </div>
     ),
   },
@@ -913,68 +920,4 @@ const SLIDES: Slide[] = [
     ),
   },
 
-  // 25 — Checklist
-  {
-    id: 25,
-    title: "Checklist prima di presentare",
-    icon: CheckSquare,
-    theme: "dark",
-    content: (
-      <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 max-w-4xl">
-        {[
-          "Ho spiegato l'obiettivo del progetto",
-          "Ho messo 1-2 prompt e so spiegarli",
-          "So dire le tecnologie e a cosa servono",
-          "Ho mostrato come sono organizzati i dati",
-          "Ho messo uno schema dei dati",
-          "Ho scelto 2-3 pezzi di codice che so spiegare",
-          "Ho pronto un esempio di errore e soluzione",
-          "Ho testato il progetto",
-          "Sono pronto a fare la demo",
-          "So dire cosa ho fatto io e cosa l'AI",
-          "So dire limiti e miglioramenti",
-          "Le slide hanno testi brevi e schemi",
-        ].map((item, i) => (
-          <ChecklistItem key={i} label={item} />
-        ))}
-      </div>
-    ),
-  },
-
-  // 26 — Chiusura
-  {
-    id: 26,
-    title: "Ricorda",
-    icon: Brain,
-    theme: "light",
-    content: (
-      <div className="flex flex-col gap-6 items-center justify-center text-center py-4">
-        <div className="max-w-3xl">
-          <p className="font-display text-lg leading-relaxed sm:text-2xl opacity-90">
-            L'AI è uno strumento di lavoro.
-          </p>
-          <p className="font-display text-base leading-relaxed mt-3 opacity-75 sm:text-xl">
-            Il valore del progetto sta nel saper fare le domande giuste,
-            controllare le risposte, capire cosa è stato costruito
-            e spiegare le scelte fatte.
-          </p>
-        </div>
-        <div className="mt-6 rounded-2xl border border-anthracite/10 bg-anthracite/5 px-8 py-5">
-          <p className="text-xs opacity-60">Progetto fatto da</p>
-          <p className="font-display text-xl font-bold mt-1 sm:text-2xl">Davide Arduini</p>
-          <p className="text-xs opacity-50 mt-2">
-            Sito tributo non ufficiale, fatto per la scuola.<br />
-            Giovanni Rana è un marchio dei rispettivi proprietari.
-          </p>
-        </div>
-        <a
-          href="/"
-          className="mt-2 inline-flex items-center gap-2 rounded-full bg-tomato-red px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-anthracite"
-        >
-          <Home className="h-4 w-4" />
-          Torna al sito
-        </a>
-      </div>
-    ),
-  },
 ]
