@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState, useRef } from "react"
 import {
   ArrowLeft, ArrowRight, Maximize, Minimize, Home,
-  Lightbulb, Bot, GitBranch, Code2, Database, Table2,
+  Lightbulb, Bot, GitBranch, Code2, Database,
   Link2, Plug, Bug, Play, Wrench, Pencil, BarChart3,
-  CheckSquare, Brain, Users, Target, Cpu, Layers,
+  CheckSquare, Brain, Target, Cpu, Layers,
 } from "lucide-react"
 import { Logo } from "@/components/logo"
 
@@ -28,7 +28,27 @@ export default function PresentazionePage() {
   const [current, setCurrent] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [direction, setDirection] = useState(1)
+  const [controlsVisible, setControlsVisible] = useState(true)
   const containerRef = useRef<HTMLDivElement>(null)
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showControls = useCallback(() => {
+    setControlsVisible(true)
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000)
+  }, [])
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      setControlsVisible(true)
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+      return
+    }
+    showControls()
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    }
+  }, [isFullscreen, showControls, current])
 
   const next = useCallback(() => {
     setDirection(1)
@@ -83,58 +103,59 @@ export default function PresentazionePage() {
   }
 
   const slide = SLIDES[current]
-  const slideKey = `slide-${current}`
-  const animClass = direction > 0
-    ? "slide-in-right"
-    : "slide-in-left"
+  const slideKey = "slide-" + current
+  const animClass = direction > 0 ? "slide-in-right" : "slide-in-left"
 
   return (
     <div ref={containerRef} className="relative h-[100svh] w-full overflow-hidden bg-anthracite">
-      {/* Slide content */}
       <div
         key={slideKey}
-        className={`absolute inset-0 flex flex-col ${slideThemeBg[slide.theme]} ${animClass}`}
+        className={"absolute inset-0 flex flex-col " + slideThemeBg[slide.theme] + " " + animClass}
       >
-        {/* Slide header */}
-        <div className="flex items-center justify-between px-8 pt-6 sm:px-12 sm:pt-8">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-5 sm:px-10 sm:pt-7">
           <div className="flex items-center gap-3">
             <slide.icon className="h-5 w-5 text-pasta-yellow" strokeWidth={2} />
             <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-60">
               {slide.id} / {SLIDES.length}
             </span>
           </div>
-          <div className={slide.theme === "dark" ? "h-6" : ""}>
+          <div>
             {slide.theme === "light" && <Logo className="h-6 w-20" />}
           </div>
         </div>
 
-        {/* Slide body */}
-        <div className="flex flex-1 items-center overflow-y-auto px-8 py-4 sm:px-12 sm:py-6">
+        {/* Body — NO scroll, must fit screen */}
+        <div className="flex flex-1 items-center overflow-hidden px-6 py-3 sm:px-10 sm:py-4">
           <div className="w-full max-w-5xl mx-auto">
-            <h1 className="font-display text-3xl font-bold leading-tight mb-6 sm:text-4xl lg:text-5xl">
+            <h1 className="font-display text-2xl font-bold leading-tight mb-4 sm:text-3xl lg:text-4xl">
               {slide.title}
             </h1>
             {slide.content}
           </div>
         </div>
 
-        {/* Slide footer with progress dots */}
-        <div className="flex items-center justify-center gap-1.5 px-8 pb-4 sm:pb-5">
+        {/* Progress dots */}
+        <div className="flex flex-wrap items-center justify-center gap-1 px-6 pb-3 sm:pb-4">
           {SLIDES.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              aria-label={`Vai alla slide ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === current ? "w-8 bg-pasta-yellow" : "w-1.5 opacity-40 hover:opacity-70"
-              }`}
+              aria-label={"Vai alla slide " + (i + 1)}
+              className={"h-1.5 rounded-full transition-all duration-300 " + (
+                i === current ? "w-6 bg-pasta-yellow" : "w-1.5 opacity-40 hover:opacity-70"
+              )}
             />
           ))}
         </div>
       </div>
 
-      {/* Navigation controls */}
-      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 sm:bottom-6">
+      {/* Nav controls — bottom-left, auto-hide in fullscreen */}
+      <div
+        onMouseEnter={showControls}
+        onMouseMove={showControls}
+        className={"absolute bottom-4 left-4 z-20 flex items-center gap-2 transition-opacity duration-300 sm:bottom-6 sm:left-6 " + (controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none")}
+      >
         <a
           href="/"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-anthracite/80 text-cream backdrop-blur-sm transition-colors hover:bg-anthracite"
@@ -176,20 +197,20 @@ export default function PresentazionePage() {
           from { opacity: 0; transform: translateX(-60px); }
           to { opacity: 1; transform: translateX(0); }
         }
-        .slide-in-right { animation: slideInRight 0.45s ease-out; }
-        .slide-in-left { animation: slideInLeft 0.45s ease-out; }
+        .slide-in-right { animation: slideInRight 0.4s ease-out; }
+        .slide-in-left { animation: slideInLeft 0.4s ease-out; }
       `}</style>
     </div>
   )
 }
 
-// ── Reusable slide content helpers ──
+// ── Helper components ──
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex flex-col gap-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 text-base leading-relaxed sm:text-lg">
+        <li key={i} className="flex items-start gap-3 text-sm leading-relaxed sm:text-base">
           <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-pasta-yellow" />
           <span className="opacity-90">{item}</span>
         </li>
@@ -198,29 +219,21 @@ function BulletList({ items }: { items: string[] }) {
   )
 }
 
-function CardGrid({ cards }: { cards: { title: string; body: string; icon: typeof Code2 }[] }) {
+function InfoCard({ title, body }: { title: string; body: string }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((c, i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-current/10 bg-current/5 p-5"
-        >
-          <c.icon className="mb-3 h-6 w-6 text-pasta-yellow" strokeWidth={2} />
-          <h3 className="font-display text-lg font-semibold mb-1">{c.title}</h3>
-          <p className="text-sm leading-relaxed opacity-75">{c.body}</p>
-        </div>
-      ))}
+    <div className="rounded-2xl border border-current/10 bg-current/5 p-4 sm:p-5">
+      <h3 className="font-display text-base font-semibold mb-1.5 sm:text-lg">{title}</h3>
+      <p className="text-sm leading-relaxed opacity-75">{body}</p>
     </div>
   )
 }
 
 function PromptBlock({ prompt, result }: { prompt: string; result: string }) {
   return (
-    <div className="rounded-2xl border border-pasta-yellow/30 bg-pasta-yellow/10 p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-pasta-yellow mb-2">Prompt inviato</p>
-      <p className="font-mono text-sm leading-relaxed mb-3 opacity-90">"{prompt}"</p>
-      <p className="text-xs font-semibold uppercase tracking-wider text-basil-green mb-1">Risultato ottenuto</p>
+    <div className="rounded-2xl border border-pasta-yellow/30 bg-pasta-yellow/10 p-4 sm:p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-pasta-yellow mb-2">Prompt che ho dato</p>
+      <p className="font-mono text-sm leading-relaxed mb-3 opacity-90">&quot;{prompt}&quot;</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-basil-green mb-1">Cosa ha fatto</p>
       <p className="text-sm leading-relaxed opacity-75">{result}</p>
     </div>
   )
@@ -228,9 +241,9 @@ function PromptBlock({ prompt, result }: { prompt: string; result: string }) {
 
 function CodeBlock({ code, caption }: { code: string; caption?: string }) {
   return (
-    <div className="rounded-2xl bg-anthracite/90 p-5 sm:p-6">
-      {caption && <p className="text-xs font-semibold uppercase tracking-wider text-pasta-yellow mb-3">{caption}</p>}
-      <pre className="overflow-x-auto text-sm leading-relaxed text-cream/90">
+    <div className="rounded-2xl bg-anthracite/90 p-4 sm:p-5">
+      {caption && <p className="text-xs font-semibold uppercase tracking-wider text-pasta-yellow mb-2">{caption}</p>}
+      <pre className="overflow-x-auto text-xs leading-relaxed text-cream/90 sm:text-sm">
         <code>{code}</code>
       </pre>
     </div>
@@ -239,13 +252,13 @@ function CodeBlock({ code, caption }: { code: string; caption?: string }) {
 
 function FlowStep({ num, title, desc }: { num: number; title: string; desc: string }) {
   return (
-    <div className="flex items-start gap-4">
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-base font-bold text-anthracite">
+    <div className="flex items-start gap-3">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-sm font-bold text-anthracite">
         {num}
       </div>
       <div className="flex-1">
-        <h3 className="font-display text-base font-semibold sm:text-lg">{title}</h3>
-        <p className="text-sm leading-relaxed opacity-75 sm:text-base">{desc}</p>
+        <h3 className="font-display text-sm font-semibold sm:text-base">{title}</h3>
+        <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{desc}</p>
       </div>
     </div>
   )
@@ -253,12 +266,12 @@ function FlowStep({ num, title, desc }: { num: number; title: string; desc: stri
 
 function FlowDiagram({ steps }: { steps: { title: string; desc: string }[] }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       {steps.map((s, i) => (
         <div key={i}>
           <FlowStep num={i + 1} title={s.title} desc={s.desc} />
           {i < steps.length - 1 && (
-            <div className="ml-[18px] my-1 h-5 w-[2px] bg-current/20" />
+            <div className="ml-[16px] my-0.5 h-4 w-[2px] bg-current/20" />
           )}
         </div>
       ))}
@@ -268,9 +281,9 @@ function FlowDiagram({ steps }: { steps: { title: string; desc: string }[] }) {
 
 function ChecklistItem({ label }: { label: string }) {
   return (
-    <li className="flex items-start gap-3 text-sm leading-relaxed sm:text-base">
+    <li className="flex items-start gap-3 text-xs leading-relaxed sm:text-sm">
       <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 border-basil-green text-basil-green text-xs">
-        ✓
+        &#10003;
       </span>
       <span className="opacity-85">{label}</span>
     </li>
@@ -280,718 +293,647 @@ function ChecklistItem({ label }: { label: string }) {
 function EvalRow({ area, weight, what }: { area: string; weight: string; what: string }) {
   return (
     <tr className="border-b border-current/10">
-      <td className="py-3 pr-4 font-medium text-sm sm:text-base">{area}</td>
-      <td className="py-3 px-4 text-pasta-yellow font-bold text-sm sm:text-base">{weight}</td>
-      <td className="py-3 pl-4 text-sm opacity-70 sm:text-base">{what}</td>
+      <td className="py-2 pr-4 font-medium text-xs sm:text-sm">{area}</td>
+      <td className="py-2 px-4 text-pasta-yellow font-bold text-xs sm:text-sm">{weight}</td>
+      <td className="py-2 pl-4 text-xs opacity-70 sm:text-sm">{what}</td>
     </tr>
   )
 }
 
-// ── All 12+ slides ──
+// ── All slides ──
 
 const SLIDES: Slide[] = [
-  // Slide 0 — Title
+  // 1 — Title
   {
-    id: 0,
-    title: "Giovanni Rana — Sito Tributo",
+    id: 1,
+    title: "Giovanni Rana — Sito web",
     icon: Target,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-6">
-        <p className="text-lg leading-relaxed opacity-80 sm:text-xl max-w-2xl">
-          Presentazione del progetto realizzato con l'ausilio dell'Intelligenza Artificiale.
+      <div className="flex flex-col gap-5">
+        <p className="text-base leading-relaxed opacity-80 sm:text-lg max-w-2xl">
+          Sito web su Giovanni Rana, fatto con l'aiuto dell'AI.
+          Presentazione del progetto di informatica.
         </p>
-        <div className="flex flex-wrap gap-3">
-          {["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4", "GSAP", "anime.js"].map((t) => (
-            <span key={t} className="rounded-full border border-cream/20 bg-cream/10 px-4 py-1.5 text-xs font-medium sm:text-sm">
+        <div className="flex flex-wrap gap-2">
+          {["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "anime.js"].map((t) => (
+            <span key={t} className="rounded-full border border-cream/20 bg-cream/10 px-3 py-1.5 text-xs font-medium sm:text-sm">
               {t}
             </span>
           ))}
         </div>
-        <p className="text-sm opacity-50 mt-4">
-          Sito tributo non ufficiale, realizzato a scopo dimostrativo.
-          <br />
-          Giovanni Rana è un marchio registrato dei rispettivi proprietari.
+        <p className="text-sm opacity-50 mt-2">
+          Sito tributo non ufficiale, fatto per la scuola.
+          Giovanni Rana è un marchio dei rispettivi proprietari.
         </p>
-        <p className="text-sm opacity-60 mt-2">Creato da Davide Arduini</p>
-        <p className="text-xs opacity-40 mt-6">
-          Usa le frecce ← → per navigare · F per schermo intero · Home/End per prima/ultima slide
+        <p className="text-sm opacity-60">Fatto da Davide Arduini</p>
+        <p className="text-xs opacity-40 mt-4">
+          Frecce ← → per cambiare slide · F per schermo intero
         </p>
       </div>
     ),
   },
 
-  // Slide 1 — Idea e obiettivo
+  // 2 — Idea e obiettivo
   {
-    id: 1,
-    title: "Idea e obiettivo del progetto",
+    id: 2,
+    title: "Idea e obiettivo",
     icon: Lightbulb,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-            <h3 className="font-display text-lg font-semibold mb-2">Il progetto</h3>
-            <p className="text-sm leading-relaxed opacity-75">
-              Un sito web tributo dedicato a Giovanni Rana che racconta la storia dell'azienda,
-              mostra i numeri della tradizione e presenta le ricette più amate della pasta fresca italiana.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-            <h3 className="font-display text-lg font-semibold mb-2">Problema affrontato</h3>
-            <p className="text-sm leading-relaxed opacity-75">
-              Creare un'esperienza web immersiva e animata che trasmetta il calore e la tradizione
-              di un marchio storico, con un design premium e animazioni fluide.
-            </p>
-          </div>
+          <InfoCard title="Cos'ho fatto" body="Un sito web su Giovanni Rana che racconta la storia dell'azienda, mostra i numeri e presenta le ricette più famose di pasta fresca." />
+          <InfoCard title="Perché l'ho fatto" body="Volevo creare un sito bello da vedere, con animazioni fluide, che facesse sentire il calore della tradizione italiana." />
         </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Funzionalità principali</h3>
-          <BulletList items={[
-            "Hero animato con parallasse e testo che appare gradualmente",
-            "Sezione storia con scroll orizzontale su desktop e verticale su mobile",
-            "Statistiche animate con contatori che partono da zero",
-            "Carousel di ricette con drag-to-scroll e inertia",
-            "Modale di dettaglio ricetta con ingredienti e preparazione",
-            "Menu mobile animato e navbar che cambia stile allo scroll",
-            "Banner cookie (consent popup) conforme alla privacy",
-          ]} />
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-2">Destinatari</h3>
-          <p className="text-sm leading-relaxed opacity-75">
-            Appassionati di cucina italiana, famiglie, e chiunque voglia scoprire le ricette
-            tradizionali della pasta fresca in un formato digitale elegante.
-          </p>
-        </div>
+        <InfoCard title="A chi è rivolto" body="A chi ama la cucina italiana, alle famiglie, e a chi vuole vedere le ricette tradizionali in un formato digitale curato." />
       </div>
     ),
   },
 
-  // Slide 2 — Intelligenza Artificiale
-  {
-    id: 2,
-    title: "Intelligenza Artificiale utilizzata",
-    icon: Bot,
-    theme: "dark",
-    content: (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Strumento utilizzato e motivo della scelta</h3>
-          <BulletList items={[
-            "Bolt.new (AI di Anthropic) — piattaforma che genera codice in tempo reale e permette iterazione visiva",
-            "Scelto perché scrive direttamente file del progetto, mostra l'anteprima e corregge errori di build automaticamente",
-          ]} />
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Attività affidate all'AI</h3>
-          <BulletList items={[
-            "Generazione della struttura del progetto Next.js con App Router",
-            "Creazione dei componenti React con animazioni GSAP e anime.js",
-            "Stesura dei testi delle ricette e delle sezioni narrative",
-            "Implementazione dello scroll orizzontale con ScrollTrigger",
-            "Risoluzione di bug (Turbopack non supportato, problemi di import)",
-          ]} />
-        </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <PromptBlock
-            prompt="Crea un sito per Giovanni Rana con hero animato, sezione storia con scroll orizzontale, statistiche animate e carousel di ricette con drag."
-            result="L'AI ha generato l'intera struttura: layout, hero con parallasse GSAP, story section con ScrollTrigger pin, statistics con contatori anime.js, recipes con pointer events."
-          />
-          <PromptBlock
-            prompt="Il dev server non parte, dice Turbopack non supportato su questa piattaforma."
-            result="L'AI ha diagnosticato il problema e cambiato lo script dev da 'next dev' a 'next dev --webpack', risolvendo l'errore."
-          />
-        </div>
-        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-5">
-          <h3 className="font-display text-base font-semibold mb-2 text-basil-green">Decisione presa da me, non proposta dall'AI</h3>
-          <p className="text-sm leading-relaxed opacity-85">
-            Ho scelto di aggiungere il disclaimer "Sito tributo non ufficiale" nel footer per
-            questioni di correttezza verso il marchio registrato. L'AI non lo aveva proposto:
-            è stata una mia scelta etica e di trasparenza.
-          </p>
-        </div>
-      </div>
-    ),
-  },
-
-  // Slide 3 — Struttura e flusso
+  // 3 — Funzionalità principali
   {
     id: 3,
-    title: "Struttura e flusso del progetto",
-    icon: GitBranch,
-    theme: "light",
-    content: (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-4">Principali schermate / moduli</h3>
-          <CardGrid cards={[
-            { title: "Hero", body: "Immagine a tutto schermo con parallasse, badge, titolo animato e CTA", icon: Layers },
-            { title: "Storia", body: "4 capitoli con scroll orizzontale (desktop) o verticale (mobile)", icon: Layers },
-            { title: "Statistiche", body: "4 contatori animati con background immagine e gradient", icon: BarChart3 },
-            { title: "Ricette", body: "Carousel con drag-to-scroll, 6 ricette con card cliccabili", icon: Layers },
-            { title: "Dettaglio ricetta", body: "Modale a tutto schermo con ingredienti e step", icon: Layers },
-            { title: "Footer + Privacy", body: "Footer con link e disclaimer, pagine legali statiche", icon: Layers },
-          ]} />
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-4">Sequenza delle operazioni</h3>
-          <FlowDiagram steps={[
-            { title: "Caricamento pagina", desc: "Next.js renderizza la home con tutte le sezioni" },
-            { title: "Animazioni di ingresso", desc: "GSAP e anime.js animano hero, testo e elementi con IntersectionObserver" },
-            { title: "Scroll utente", desc: "Lenis gestisce lo smooth scroll; ScrollTrigger attiva lo scroll orizzontale della storia" },
-            { title: "Click su una ricetta", desc: "Si apre il modale con dettagli; lo scroll del body viene bloccato" },
-            { title: "Chiusura modale", desc: "Tasto Escape o click su overlay; lo scroll viene ripristinato" },
-          ]} />
-        </div>
-        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-          <h3 className="font-display text-base font-semibold mb-2">Dati e elaborazioni</h3>
-          <p className="text-sm leading-relaxed opacity-75">
-            I dati delle ricette sono definiti staticamente in un file TypeScript (lib/recipes.ts).
-            Non c'è un database: l'utente naviga, visualizza e interagisce, ma non inserisce dati.
-            Le elaborazioni sono tutte lato client: animazioni, scroll, drag del carousel, apertura/chiusura modali.
-          </p>
-        </div>
-      </div>
-    ),
-  },
-
-  // Slide 4 — Tecnologie
-  {
-    id: 4,
-    title: "Tecnologie utilizzate",
-    icon: Cpu,
+    title: "Cosa fa il sito",
+    icon: Layers,
     theme: "dark",
     content: (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { title: "TypeScript", body: "Linguaggio principale: tipizza componenti, props, ricette. Previene errori in fase di sviluppo.", icon: Code2 },
-          { title: "React 19", body: "Libreria UI: componenti riutilizzabili con hooks (useState, useEffect, useRef, useCallback).", icon: Code2 },
-          { title: "Next.js 16", body: "Framework full-stack: App Router, rendering statico, ottimizzazione immagini, routing basato su filesystem.", icon: Layers },
-          { title: "Tailwind CSS v4", body: "Framework CSS utility-first: design system con colori personalizzati (cream, tomato-red, pasta-yellow, basil-green, anthracite).", icon: Code2 },
-          { title: "GSAP + ScrollTrigger", body: "Animazioni avanzate: parallasse hero, scroll orizzontale pinnato, transizioni del modale ricetta.", icon: Cpu },
-          { title: "anime.js", body: "Libreria di animazione: ingresso sfalsato di card e statistiche, contatori numerici animati.", icon: Cpu },
-          { title: "Lenis", body: "Smooth scroll: rende lo scorrimento fluido e sincronizzato con le animazioni ScrollTrigger.", icon: Cpu },
-          { title: "lucide-react", body: "Set di icone SVG leggere usate nell'interfaccia (frecce, menu, icone di sezione).", icon: Code2 },
-          { title: "Netlify", body: "Piattaforma di pubblicazione: deploy automatico del sito Next.js con plugin ufficiale.", icon: Layers },
-        ].map((t) => (
-          <div key={t.title} className="rounded-2xl border border-cream/10 bg-cream/5 p-5">
-            <t.icon className="mb-3 h-6 w-6 text-pasta-yellow" strokeWidth={2} />
-            <h3 className="font-display text-base font-semibold mb-1">{t.title}</h3>
-            <p className="text-sm leading-relaxed opacity-70">{t.body}</p>
+          { t: "Hero", d: "Immagine grande con titolo che appare piano piano" },
+          { t: "Storia", d: "4 capitoli che si scorrono di lato sul desktop" },
+          { t: "Numeri", d: "Contatori che partono da 0 e arrivano al valore" },
+          { t: "Ricette", d: "6 ricette in un carousel che puoi trascinare" },
+          { t: "Dettaglio", d: "Cliccando una ricetta si apre una finestra con ingredienti e passaggi" },
+          { t: "Menu", d: "Menu mobile animato e barra in alto che cambia colore" },
+        ].map((f, i) => (
+          <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+            <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{f.t}</h3>
+            <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{f.d}</p>
           </div>
         ))}
       </div>
     ),
   },
 
-  // Slide 5 — Database
+  // 4 — AI usata
   {
-    id: 5,
-    title: "Focus tecnico: Database e dati",
-    icon: Database,
+    id: 4,
+    title: "L'AI che ho usato",
+    icon: Bot,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-6">
-        <div className="rounded-2xl border border-tomato-red/20 bg-tomato-red/5 p-6">
-          <h3 className="font-display text-lg font-semibold mb-2 text-tomato-red">Il progetto non utilizza un database</h3>
-          <p className="text-sm leading-relaxed opacity-80">
-            Questo è un sito vetrina statico: tutti i dati (ricette, testi, immagini) sono definiti
-            come costanti TypeScript nel file <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">lib/recipes.ts</code>.
-            Non c'è necessità di persistenza, login o interazione con dati utente.
-          </p>
-        </div>
+      <div className="flex flex-col gap-4">
+        <InfoCard title="Strumento usato" body="Bolt.new, un'AI che scrive codice direttamente nei file del progetto e ti fa vedere il risultato in tempo reale." />
         <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Come sono organizzati i dati</h3>
-          <p className="text-sm leading-relaxed opacity-75 mb-4">
-            I dati sono strutturati come un array di oggetti tipati <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">Recipe</code>:
-          </p>
-          <CodeBlock
-            caption="Tipo Recipe (lib/recipes.ts)"
-            code={`type Recipe = {
-  slug: string          // identificatore univoco (es. "gnocchi-burro-e-salvia")
-  name: string          // nome della ricetta
-  category: string      // categoria (es. "Piatti classici")
-  description: string   // descrizione breve
-  time: string          // tempo di preparazione
-  servings: string      // numero di porzioni
-  image: string         // percorso immagine
-  ingredients: string[] // lista ingredienti
-  steps: string[]       // step di preparazione
-}`}
-          />
+          <h3 className="font-display text-base font-semibold mb-3 sm:text-lg">Cosa ho chiesto all'AI di fare</h3>
+          <BulletList items={[
+            "Creare tutta la struttura del sito con Next.js",
+            "Fare i componenti con le animazioni (GSAP e anime.js)",
+            "Scrivere i testi delle ricette e delle sezioni",
+            "Fare lo scroll orizzontale della sezione storia",
+            "Risolvere bug e errori che venivano fuori",
+          ]} />
         </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Funzione di recupero dati</h3>
-          <CodeBlock
-            caption="getRecipeBySlug — recupera una ricetta dal suo slug"
-            code={`export function getRecipeBySlug(slug: string) {
-  return recipes.find((r) => r.slug === slug)
-}`}
-          />
-          <p className="text-sm leading-relaxed opacity-75 mt-3">
-            Lo <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">slug</code> funge da chiave primaria:
-            è univoco per ogni ricetta e viene usato per recuperare i dati quando l'utente clicca su una card.
+      </div>
+    ),
+  },
+
+  // 5 — Prompt esempi
+  {
+    id: 5,
+    title: "Esempi di prompt che ho dato",
+    icon: Bot,
+    theme: "dark",
+    content: (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <PromptBlock
+          prompt="Crea un sito per Giovanni Rana con hero animato, sezione storia con scroll orizzontale, statistiche animate e carousel di ricette con drag."
+          result="L'AI ha creato tutto: layout, hero con parallasse, storia con scroll laterale, numeri animati, carousel con trascinamento."
+        />
+        <PromptBlock
+          prompt="Il dev server non parte, dice Turbopack non supportato su questa piattaforma."
+          result="L'AI ha capito il problema e ha cambiato il comando da 'next dev' a 'next dev --webpack'."
+        />
+      </div>
+    ),
+  },
+
+  // 6 — Mia decisione
+  {
+    id: 6,
+    title: "Una decisione mia, non dell'AI",
+    icon: Brain,
+    theme: "light",
+    content: (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-5">
+          <h3 className="font-display text-base font-semibold mb-2 text-basil-green sm:text-lg">Il disclaimer nel footer</h3>
+          <p className="text-sm leading-relaxed opacity-85 sm:text-base">
+            Ho deciso io di aggiungere &quot;Sito tributo non ufficiale&quot; in fondo alla pagina.
+            L'AI non lo aveva suggerito, ma io volevo essere onesto sul fatto che non è il sito vero di Giovanni Rana.
+            È stata una mia scelta per correttezza.
           </p>
         </div>
         <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-          <h3 className="font-display text-base font-semibold mb-2">Se il progetto avesse un database...</h3>
-          <p className="text-sm leading-relaxed opacity-75">
-            Avremmo usato Supabase (PostgreSQL) con una tabella <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">recipes</code>
-            dove <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">slug</code> sarebbe la Primary Key,
-            con Row Level Security per la lettura pubblica e un'interfaccia admin protetta per l'inserimento.
+          <h3 className="font-display text-base font-semibold mb-2 sm:text-lg">Come ho cambiato i prompt</h3>
+          <p className="text-sm leading-relaxed opacity-75 sm:text-base">
+            Quando il logo non si vedeva bene, ho dovuto spiegare meglio all'AI cosa volevo:
+            &quot;Il logo deve essere chiaro quando la barra è trasparente e scuro quando ha sfondo chiaro&quot;.
+            Prima era troppo generico e l'AI non capiva.
           </p>
         </div>
       </div>
     ),
   },
 
-  // Slide 6 — Relazioni
+  // 7 — Struttura: schermate
   {
-    id: 6,
+    id: 7,
+    title: "Le schermate del sito",
+    icon: GitBranch,
+    theme: "dark",
+    content: (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { t: "Hero", d: "La prima cosa che vedi: foto grande + titolo" },
+          { t: "Storia", d: "4 capitoli della storia dell'azienda" },
+          { t: "Numeri", d: "4 statistiche con contatori animati" },
+          { t: "Ricette", d: "Carousel con 6 ricette trascinabili" },
+          { t: "Dettaglio ricetta", d: "Finestra con ingredienti e passaggi" },
+          { t: "Footer", d: "Link in basso + pagine privacy e termini" },
+        ].map((s, i) => (
+          <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+            <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{s.t}</h3>
+            <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{s.d}</p>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+
+  // 8 — Flusso
+  {
+    id: 8,
+    title: "Cosa succede quando usi il sito",
+    icon: GitBranch,
+    theme: "light",
+    content: (
+      <div className="flex flex-col gap-4">
+        <FlowDiagram steps={[
+          { title: "Apri il sito", desc: "La pagina si carica con tutte le sezioni" },
+          { title: "Le animazioni partono", desc: "Il titolo appare, le immagini si muovono" },
+          { title: "Scorri", desc: "Lo scroll è fluido, la storia va di lato" },
+          { title: "Clicchi una ricetta", desc: "Si apre la finestra con i dettagli" },
+          { title: "Chiudi", desc: "Torni dove eri, tutto riprende normalmente" },
+        ]} />
+        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-4">
+          <p className="text-sm leading-relaxed opacity-75">
+            I dati delle ricette sono scritti dentro il codice. Non c'è un database:
+            l'utente guarda e clicca, ma non inserisce dati.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+
+  // 9 — Tecnologie parte 1
+  {
+    id: 9,
+    title: "Tecnologie usate (1/2)",
+    icon: Cpu,
+    theme: "dark",
+    content: (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          { t: "TypeScript", d: "Il linguaggio con cui ho scritto tutto. Aiuta a non fare errori." },
+          { t: "React 19", d: "La libreria per fare i componenti riutilizzabili del sito." },
+          { t: "Next.js 16", d: "Il framework che gestisce le pagine, le immagini e mette online il sito." },
+          { t: "Tailwind CSS v4", d: "Serve a dare lo stile ai componenti con classi prefatte." },
+          { t: "GSAP", d: "Libreria per animazioni: parallasse, scroll orizzontale, transizioni." },
+          { t: "anime.js", d: "Un'altra libreria per animare: contatori e comparsa delle card." },
+        ].map((t, i) => (
+          <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+            <h3 className="font-display text-sm font-semibold text-pasta-yellow mb-1 sm:text-base">{t.t}</h3>
+            <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{t.d}</p>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+
+  // 10 — Tecnologie parte 2
+  {
+    id: 10,
+    title: "Tecnologie usate (2/2)",
+    icon: Cpu,
+    theme: "light",
+    content: (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          { t: "Lenis", d: "Rende lo scroll della pagina fluido invece di quello di default." },
+          { t: "lucide-react", d: "Set di icone leggere usate nell'interfaccia." },
+          { t: "Netlify", d: "Piattaforma online dove il sito viene pubblicato." },
+          { t: "Playfair Display", d: "Font per i titoli, dà un look elegante." },
+          { t: "Manrope", d: "Font per il testo normale, facile da leggere." },
+          { t: "Dancing Script", d: "Font per il logo, stile manoscritto." },
+        ].map((t, i) => (
+          <div key={i} className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-4">
+            <h3 className="font-display text-sm font-semibold text-tomato-red mb-1 sm:text-base">{t.t}</h3>
+            <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{t.d}</p>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+
+  // 11 — Database: non c'è
+  {
+    id: 11,
+    title: "Database: come sono organizzati i dati",
+    icon: Database,
+    theme: "dark",
+    content: (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-2xl border border-tomato-red/20 bg-tomato-red/5 p-4">
+          <h3 className="font-display text-base font-semibold mb-2 text-tomato-red sm:text-lg">Il sito non ha un database</h3>
+          <p className="text-sm leading-relaxed opacity-80">
+            Tutte le ricette sono scritte direttamente nel codice, in un file TypeScript.
+            Non serve salvare dati perché l'utente non inserisce niente.
+          </p>
+        </div>
+        <CodeBlock
+          caption="Tipo Recipe (il modello di una ricetta)"
+          code={"type Recipe = {\n  slug: string          // nome corto univoco\n  name: string          // nome della ricetta\n  category: string      // categoria\n  description: string   // descrizione\n  time: string          // tempo di cottura\n  servings: string      // quante persone\n  image: string         // foto\n  ingredients: string[] // lista ingredienti\n  steps: string[]       // passaggi\n}"}
+        />
+      </div>
+    ),
+  },
+
+  // 12 — Database: chiave primaria
+  {
+    id: 12,
+    title: "Chiave primaria e recupero dati",
+    icon: Database,
+    theme: "light",
+    content: (
+      <div className="flex flex-col gap-4">
+        <InfoCard title="La chiave primaria è lo slug" body="Ogni ricetta ha uno slug, cioè un nome corto unico (es. 'gnocchi-burro-e-salvia'). Non ci sono due ricette con lo stesso slug. Serve a trovare la ricetta giusta quando clicchi." />
+        <CodeBlock
+          caption="Funzione che trova una ricetta dallo slug"
+          code={"export function getRecipeBySlug(slug: string) {\n  return recipes.find((r) => r.slug === slug)\n}"}
+        />
+        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-4">
+          <h3 className="font-display text-sm font-semibold mb-1 sm:text-base">Se avessi un database...</h3>
+          <p className="text-xs leading-relaxed opacity-75 sm:text-sm">
+            Avrei usato Supabase (PostgreSQL) con una tabella recipes dove lo slug sarebbe la chiave primaria.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+
+  // 13 — Relazioni
+  {
+    id: 13,
     title: "Relazioni tra i dati",
     icon: Link2,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-6">
-        <p className="text-base leading-relaxed opacity-80 sm:text-lg max-w-3xl">
-          Anche senza un database relazionale, il progetto struttura i dati con relazioni logiche
-          tra le entità.
-        </p>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-4">Schema delle entità</h3>
-          <CodeBlock
-            code={`┌─────────────────────────────┐
-│         recipes[]            │
-│  (array di oggetti Recipe)   │
-├─────────────────────────────┤
-│  slug (PK) ←─── getRecipeBySlug()
-│  name                        │
-│  category ──→ raggruppa per  │
-│  description      categoria  │
-│  time                         │
-│  servings                     │
-│  image ───→ RECIPE_IMAGES    │
-│  ingredients[]                │
-│  steps[]                      │
-└─────────────────────────────┘
-         │
-         │ 1:N (una ricetta → molti ingredienti)
-         │ 1:N (una ricetta → molti step)
-         ▼
-┌──────────────┐  ┌──────────────┐
-│ ingredients[]│  │   steps[]    │
-│  (string[])  │  │  (string[])  │
-└──────────────┘  └──────────────┘
-
-┌─────────────────────────────┐
-│       RECIPE_IMAGES          │
-│  (mappa slug → percorso)     │
-│  "gnocchi-burro-e-salvia"    │
-│    → "/images/recipe-..."    │
-└─────────────────────────────┘`}
-          />
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Tipi di relazione</h3>
-          <BulletList items={[
-            "1:N — Una ricetta ha molti ingredienti (array di stringhe)",
-            "1:N — Una ricetta ha molti step di preparazione (array di stringhe)",
-            "1:1 — Ogni ricetta ha un'immagine associata tramite la mappa RECIPE_IMAGES",
-            "N:1 — Più ricette possono appartenere alla stessa categoria (es. \"Tradizione emiliana\")",
-          ]} />
-        </div>
-        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-5">
-          <h3 className="font-display text-base font-semibold mb-2 text-basil-green">Campo di collegamento</h3>
-          <p className="text-sm leading-relaxed opacity-85">
-            Lo <code className="rounded bg-cream/10 px-1.5 py-0.5 text-xs">slug</code> è il campo
-            che realizza materialmente il collegamento: quando l'utente clicca una card,
-            lo slug passa alla funzione <code className="rounded bg-cream/10 px-1.5 py-0.5 text-xs">getRecipeBySlug()</code>
-            che recupera i dati completi della ricetta.
-          </p>
-        </div>
+      <div className="flex flex-col gap-4">
+        <CodeBlock
+          code={"ricette (array)\n  |\n  | 1:N  una ricetta -> tanti ingredienti\n  | 1:N  una ricetta -> tanti passaggi\n  | 1:1  una ricetta -> una foto\n  | N:1  piu' ricette -> stessa categoria\n  |\n  +-- ingredients[]  (lista di stringhe)\n  +-- steps[]         (lista di stringhe)\n  +-- image           (una stringa)\n  +-- category        (una stringa condivisa)"}
+        />
+        <BulletList items={[
+          "Una ricetta ha tanti ingredienti (relazione 1 a molti)",
+          "Una ricetta ha tanti passaggi (relazione 1 a molti)",
+          "Ogni ricetta ha una sola foto (relazione 1 a 1)",
+          "Più ricette possono avere la stessa categoria (relazione molti a 1)",
+        ]} />
       </div>
     ),
   },
 
-  // Slide 7 — Collegamento programma e dati
+  // 14 — Collegamento programma-dati
   {
-    id: 7,
-    title: "Collegamento tra programma e dati",
+    id: 14,
+    title: "Come il programma usa i dati",
     icon: Plug,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-6">
-        <p className="text-base leading-relaxed opacity-80 max-w-3xl">
-          Seguiamo il percorso completo di un dato: dal file statico alla visualizzazione nel modale.
-        </p>
+      <div className="flex flex-col gap-4">
         <FlowDiagram steps={[
-          { title: "Definizione dei dati", desc: "Le ricette sono definite come array statico in lib/recipes.ts con tipo Recipe" },
-          { title: "Import nel componente", desc: "RecipesSection importa l'array recipes e lo mappa in card visive" },
-          { title: "Click dell'utente", desc: "L'utente clicca una card; onOpenRecipe(slug) passa lo slug al state della pagina" },
-          { title: "Recupero del dato", desc: "getRecipeBySlug(slug) cerca nell'array la ricetta con quello slug" },
-          { title: "Visualizzazione", desc: "RecipeDetail riceve l'oggetto Recipe e mostra immagine, ingredienti e step nel modale" },
+          { title: "I dati sono nel file", desc: "Le ricette sono scritte in lib/recipes.ts" },
+          { title: "Il componente le importa", desc: "RecipesSection prende l'array e crea le card" },
+          { title: "Clicchi una card", desc: "Lo slug passa alla funzione di ricerca" },
+          { title: "La funzione trova la ricetta", desc: "getRecipeBySlug(slug) cerca nello array" },
+          { title: "Si apre il modale", desc: "RecipeDetail mostra tutto: foto, ingredienti, passaggi" },
         ]} />
         <CodeBlock
-          caption="Flusso del dato in app/page.tsx"
-          code={`// 1. State gestisce quale ricetta è aperta
-const [openSlug, setOpenSlug] = useState<string | null>(null)
-
-// 2. Click sulla card passa lo slug
-const handleOpen = useCallback((slug: string) => setOpenSlug(slug), [])
-
-// 3. Recupero del dato tramite lo slug (chiave)
-const activeRecipe = openSlug
-  ? getRecipeBySlug(openSlug) ?? null
-  : null
-
-// 4. Passaggio al componente di visualizzazione
-<RecipeDetail recipe={activeRecipe} onClose={handleClose} />`}
+          code={"const [openSlug, setOpenSlug] = useState(null)\n\nconst activeRecipe = openSlug\n  ? getRecipeBySlug(openSlug)\n  : null\n\n<RecipeDetail recipe={activeRecipe} />"}
         />
-        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-          <h3 className="font-display text-base font-semibold mb-2">Domande chiave</h3>
-          <BulletList items={[
-            "Perché hai definito i dati staticamente? Perché il sito è una vetrina senza interazione utente",
-            "Qual è la \"Primary Key\"? Lo slug, univoco per ogni ricetta",
-            "Cosa accade quando l'utente preme una card? Lo slug viene passato allo state, la ricetta viene recuperata e mostrata nel modale",
-          ]} />
-        </div>
       </div>
     ),
   },
 
-  // Slide 8 — Parti significative del codice
+  // 15 — Codice 1: scroll orizzontale
   {
-    id: 8,
-    title: "Parti significative del codice",
+    id: 15,
+    title: "Codice: scroll orizzontale",
     icon: Code2,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">1. Scroll orizzontale con GSAP ScrollTrigger</h3>
-          <CodeBlock
-            code={`// Quando l'utente scorre, il track si sposta orizzontalmente
-ScrollTrigger.create({
-  trigger: container,
-  start: "top top",
-  end: () => "+=" + distance,
-  pin: true,
-  scrub: 1.2,
-  onUpdate: (self) => {
-    gsap.set(track, { x: -distance * self.progress })
-    setActivePanel(
-      Math.round(self.progress * (PANELS.length - 1))
-    )
-  },
-})`}
-          />
-          <p className="text-sm leading-relaxed opacity-70 mt-2">
-            Si attiva quando la sezione storia raggiunge il top della viewport. Pinna la sezione
-            e trasforma lo scroll verticale in movimento orizzontale del track.
-          </p>
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">2. Drag-to-scroll con inertia nel carousel ricette</h3>
-          <CodeBlock
-            code={`const onPointerDown = (e) => {
-  setIsDown(true)
-  dragState.current = {
-    startX: e.clientX,
-    scrollLeft: el.scrollLeft,
-    moved: false,
-    velocity: 0,
-  }
-}
-
-const endDrag = () => {
-  if (Math.abs(dragState.current.velocity) > 1) {
-    applyMomentum(dragState.current.velocity)
-  }
-}`}
-          />
-          <p className="text-sm leading-relaxed opacity-70 mt-2">
-            Gestisce il trascinamento con pointer events. Al rilascio, se c'è velocità residua,
-            applica un'inerzia con decaying per un effetto naturale.
-          </p>
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">3. Blocco scroll del body quando si apre il modale</h3>
-          <CodeBlock
-            code={`const scrollY = window.scrollY
-document.body.style.position = "fixed"
-document.body.style.top = "-" + scrollY + "px"
-document.body.style.width = "100%"
-document.documentElement.style.overflow = "hidden"
-window.__lenis?.stop()
-
-// Al cleanup: ripristina tutto
-window.scrollTo(0, scrollY)
-window.__lenis?.start()`}
-          />
-          <p className="text-sm leading-relaxed opacity-70 mt-2">
-            Quando il modale ricetta è aperto, lo scroll del body viene bloccato per evitare
-            che lo sfondo scorra. Lenis viene fermato e ripristinato alla chiusura.
-          </p>
-        </div>
+      <div className="flex flex-col gap-3">
+        <CodeBlock
+          caption="GSAP ScrollTrigger — fa andare la storia di lato"
+          code={"ScrollTrigger.create({\n  trigger: container,\n  start: \"top top\",\n  end: \"+=\" + distance,\n  pin: true,\n  scrub: 1.2,\n  onUpdate: (self) => {\n    gsap.set(track, {\n      x: -distance * self.progress\n    })\n  },\n})"}
+        />
+        <p className="text-sm leading-relaxed opacity-70">
+          Quando arrivi alla sezione storia, la pagina si ferma e il contenuto
+          si sposta di lato mentre scorri. Più scorri, più va a destra.
+        </p>
       </div>
     ),
   },
 
-  // Slide 9 — Test ed errori
+  // 16 — Codice 2: drag carousel
   {
-    id: 9,
-    title: "Test ed errori",
+    id: 16,
+    title: "Codice: trascinamento carousel",
+    icon: Code2,
+    theme: "light",
+    content: (
+      <div className="flex flex-col gap-3">
+        <CodeBlock
+          caption="Pointer events — trascini le card delle ricette"
+          code={"const onPointerDown = (e) => {\n  setIsDown(true)\n  dragState.current = {\n    startX: e.clientX,\n    scrollLeft: el.scrollLeft,\n    velocity: 0,\n  }\n}\n\nconst endDrag = () => {\n  if (velocity > 1) {\n    applyMomentum(velocity)\n  }\n}"}
+        />
+        <p className="text-sm leading-relaxed opacity-70">
+          Quando tieni premuto e trascini, le card si muovono. Quando lasci,
+          se c'era velocità, continuano a scivolare un po' per sembrare naturale.
+        </p>
+      </div>
+    ),
+  },
+
+  // 17 — Codice 3: blocco body
+  {
+    id: 17,
+    title: "Codice: bloccare lo scroll dietro il modale",
+    icon: Code2,
+    theme: "dark",
+    content: (
+      <div className="flex flex-col gap-3">
+        <CodeBlock
+          caption="Quando apri una ricetta, la pagina dietro non deve scrollare"
+          code={"document.body.style.position = \"fixed\"\ndocument.body.style.top = \"-\" + scrollY + \"px\"\ndocument.body.style.width = \"100%\"\ndocument.documentElement.style.overflow = \"hidden\"\nwindow.__lenis?.stop()\n\n// Quando chiudi: rimetti tutto a posto\nwindow.scrollTo(0, scrollY)\nwindow.__lenis?.start()"}
+        />
+        <p className="text-sm leading-relaxed opacity-70">
+          Quando il modale è aperto, blocco lo scroll della pagina dietro.
+          Quando lo chiudi, rimetto tutto come prima.
+        </p>
+      </div>
+    ),
+  },
+
+  // 18 — Test ed errori 1
+  {
+    id: 18,
+    title: "Test ed errori (1/2)",
     icon: Bug,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-5">
-        <div className="rounded-2xl border border-tomato-red/20 bg-tomato-red/5 p-5">
-          <h3 className="font-display text-lg font-semibold mb-2 text-tomato-red">Problema 1: Turbopack non supportato</h3>
+      <div className="flex flex-col gap-3">
+        <div className="rounded-2xl border border-tomato-red/20 bg-tomato-red/5 p-4">
+          <h3 className="font-display text-base font-semibold mb-2 text-tomato-red sm:text-lg">Errore: il server non partiva</h3>
           <BulletList items={[
-            "Sintomo: il dev server non partiva, errore \"Turbopack is not supported on this platform\"",
-            "Diagnosi: Next.js 16 usa Turbopack di default, ma la piattaforma non ha i binding nativi",
-            "Risoluzione: cambiato lo script dev in \"next dev --webpack\" nel package.json",
-            "Verifica: il dev server è partito correttamente dopo la modifica",
+            "Il dev server dava errore: Turbopack non supportato",
+            "Next.js 16 usa Turbopack di default ma qui non funziona",
+            "Ho cambiato il comando in 'next dev --webpack'",
+            "Dopo ha funzionato tutto",
           ]} />
         </div>
-        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-          <h3 className="font-display text-lg font-semibold mb-2">Problema 2: Logo non leggibile sulla navbar</h3>
+        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-4">
+          <h3 className="font-display text-base font-semibold mb-2 sm:text-lg">Errore: il logo non si vedeva</h3>
           <BulletList items={[
-            "Sintomo: il logo blu era invisibile sull'hero scuro (top) e quello crema illeggibile sulla pillola chiara (scrolled)",
-            "Diagnosi: il componente Logo non cambiava colore in base allo stato della navbar",
-            "Risoluzione: aggiunto invert={!scrolled} per usare il logo crema sopra l'hero e blu quando scrolled",
-            "Verifica: il logo è leggibile in entrambi gli stati",
+            "Il logo blu era invisibile sull'immagine scura",
+            "Ho aggiunto invert per cambiare colore a seconda dello stato",
+            "Ora è chiaro sull'hero e scuro quando la barra è bianca",
           ]} />
-        </div>
-        <div className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-          <h3 className="font-display text-lg font-semibold mb-2">Test effettuati</h3>
-          <BulletList items={[
-            "Test su desktop: scroll orizzontale, parallasse, contatori animati — tutto corretto",
-            "Test su mobile: layout verticale della storia, menu hamburger, carousel touch — corretto",
-            "Test accessibilità: navigazione da tastiera (Escape chiude il modale), focus visibile",
-            "Test build: npm run build completa senza errori, 5 pagine generate staticamente",
-            "Test edge case: modale chiuso con click sull'overlay (non solo sul bottone)",
-          ]} />
-        </div>
-        <div className="rounded-2xl border border-pasta-yellow/30 bg-pasta-yellow/10 p-5">
-          <h3 className="font-display text-base font-semibold mb-2">Correzione di una risposta dell'AI</h3>
-          <p className="text-sm leading-relaxed opacity-85">
-            L'AI aveva inizialmente generato il logo con un Image fill senza distinguere lo stato scrolled/non-scrolled.
-            Ho dovuto precisare: "Il logo deve essere crema quando la navbar è trasparente e blu quando ha sfondo chiaro".
-            L'AI ha allora aggiunto la prop <code className="rounded bg-anthracite/10 px-1.5 py-0.5 text-xs">invert</code> e
-            la logica condizionale corretta.
-          </p>
         </div>
       </div>
     ),
   },
 
-  // Slide 10 — Dimostrazione pratica
+  // 19 — Test ed errori 2
   {
-    id: 10,
-    title: "Dimostrazione pratica",
-    icon: Play,
+    id: 19,
+    title: "Test ed errori (2/2)",
+    icon: Bug,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-5">
-        <p className="text-base leading-relaxed opacity-80 max-w-2xl">
-          Durante l'esposizione, utilizzerò realmente il sito aperto nel browser.
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[
-            "Aprire il sito e mostrare l'hero animato con il testo che appare",
-            "Scorrere fino alla sezione storia e mostrare lo scroll orizzontale",
-            "Arrivare alle statistiche e mostrare i contatori animati",
-            "Andare al carousel ricette e trascinare le card",
-            "Cliccare una ricetta e mostrare il modale con ingredienti e step",
-            "Chiudere il modale con Escape e verificare il ripristino dello scroll",
-            "Aprire il menu mobile e mostrare l'animazione dell'hamburger",
-            "Mostrare le pagine /privacy e /termini",
-          ].map((step, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-2xl border border-cream/10 bg-cream/5 p-4">
-              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-sm font-bold text-anthracite">
-                {i + 1}
-              </span>
-              <span className="text-sm leading-relaxed opacity-85">{step}</span>
-            </div>
-          ))}
+      <div className="flex flex-col gap-3">
+        <div>
+          <h3 className="font-display text-base font-semibold mb-3 sm:text-lg">Test che ho fatto</h3>
+          <BulletList items={[
+            "Desktop: scroll orizzontale, parallasse, contatori — tutto ok",
+            "Mobile: layout verticale, menu hamburger, carousel touch — ok",
+            "Tastiera: Escape chiude il modale, focus visibile",
+            "Build: npm run build finisce senza errori",
+          ]} />
         </div>
-        <div className="rounded-2xl border border-tomato-red/30 bg-tomato-red/10 p-5 mt-2">
-          <h3 className="font-display text-base font-semibold mb-2 text-tomato-red">Caso di errore da mostrare</h3>
-          <p className="text-sm leading-relaxed opacity-85">
-            Mostrare cosa succede se si tenta di aprire una ricetta inesistente:
-            <code className="rounded bg-cream/10 px-1.5 py-0.5 text-xs mx-1">getRecipeBySlug("inesistente")</code>
-            restituisce <code className="rounded bg-cream/10 px-1.5 py-0.5 text-xs">undefined</code>,
-            che viene gestito con <code className="rounded bg-cream/10 px-1.5 py-0.5 text-xs">?? null</code> —
-            il modale non si apre e non ci sono crash.
+        <div className="rounded-2xl border border-pasta-yellow/30 bg-pasta-yellow/10 p-4">
+          <h3 className="font-display text-sm font-semibold mb-2 sm:text-base">Una risposta dell'AI che ho dovuto correggere</h3>
+          <p className="text-xs leading-relaxed opacity-85 sm:text-sm">
+            L'AI aveva fatto il logo senza cambiare colore. Ho dovuto spiegare meglio:
+            &quot;Il logo deve essere chiaro quando la barra è trasparente e scuro quando è bianca&quot;.
+            Allora ha aggiunto la proprietà invert e ha funzionato.
           </p>
         </div>
       </div>
     ),
   },
 
-  // Slide 11 — Modifica durante la valutazione
+  // 20 — Dimostrazione
   {
-    id: 11,
-    title: "Piccola modifica durante la valutazione",
-    icon: Wrench,
+    id: 20,
+    title: "Dimostrazione pratica",
+    icon: Play,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-5">
-        <p className="text-base leading-relaxed opacity-80 max-w-3xl">
-          Il docente può chiedere una modifica in tempo reale. Ecco esempi di cosa potrei fare
-          utilizzando l'AI e spiegando il processo.
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          "Aprire il sito e mostrare l'hero animato",
+          "Scorrere fino alla storia e mostrare lo scroll di lato",
+          "Arrivare ai numeri e far vedere i contatori",
+          "Andare alle ricette e trascinare le card",
+          "Cliccare una ricetta e mostrare ingredienti e passaggi",
+          "Chiudere con Escape e far vedere che lo scroll torna",
+          "Aprire il menu mobile",
+          "Mostrare le pagine privacy e termini",
+        ].map((step, i) => (
+          <div key={i} className="flex items-start gap-3 rounded-2xl border border-anthracite/10 bg-anthracite/5 p-3">
+            <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-pasta-yellow font-display text-sm font-bold text-anthracite">
+              {i + 1}
+            </span>
+            <span className="text-xs leading-relaxed opacity-85 sm:text-sm">{step}</span>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+
+  // 21 — Modifica durante valutazione
+  {
+    id: 21,
+    title: "Modifica dal vivo",
+    icon: Wrench,
+    theme: "dark",
+    content: (
+      <div className="flex flex-col gap-4">
+        <p className="text-sm leading-relaxed opacity-80 sm:text-base">
+          Il prof può chiedere di cambiare qualcosa sul momento. Ecco cosa potrei fare.
         </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[
-            { req: "Aggiungere una nuova ricetta", how: "Aggiungo un nuovo oggetto Recipe nell'array recipes con tutti i campi richiesti" },
-            { req: "Cambiare il colore di sfondo dell'hero", how: "Modifico la classe bg-anthracite nel componente Hero o il colore in globals.css" },
-            { req: "Aggiungere un pulsante \"condividi\" nelle card", how: "Aggiungo un bottone in RecipeCard con un'icona lucide-react e un handler" },
-            { req: "Modificare il numero di statistiche", how: "Aggiungo o rimuovo oggetti nell'array STATS in StatisticsSection" },
-            { req: "Aggiungere una nuova sezione", how: "Creo un nuovo componente e lo importo in app/page.tsx dopo le sezioni esistenti" },
-            { req: "Cambiare l'ordine delle sezioni", how: "Riordino i componenti nel JSX di app/page.tsx" },
+            { r: "Aggiungere una ricetta", h: "Aggiungo un oggetto Recipe nell'array" },
+            { r: "Cambiare un colore", h: "Modifico le variabili CSS in globals.css" },
+            { r: "Aggiungere un pulsante", h: "Metto un bottone nel componente con un'icona" },
+            { r: "Cambiare i numeri", h: "Aggiungo o tolgo oggetti nell'array STATS" },
+            { r: "Aggiungere una sezione", h: "Creo un componente e lo metto in page.tsx" },
+            { r: "Cambiare l'ordine", h: "Sposto i componenti nel file principale" },
           ].map((ex, i) => (
-            <div key={i} className="rounded-2xl border border-anthracite/10 bg-anthracite/5 p-5">
-              <h3 className="font-display text-base font-semibold mb-2 text-tomato-red">{ex.req}</h3>
-              <p className="text-sm leading-relaxed opacity-75">{ex.how}</p>
+            <div key={i} className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+              <h3 className="font-display text-sm font-semibold text-tomato-red mb-1 sm:text-base">{ex.r}</h3>
+              <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{ex.h}</p>
             </div>
           ))}
-        </div>
-        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-5">
-          <h3 className="font-display text-base font-semibold mb-2 text-basil-green">Come formulerei la richiesta all'AI</h3>
-          <p className="text-sm leading-relaxed opacity-85 font-mono">
-            "Aggiungi una ricetta 'Spaghetti carbonara' con categoria 'Piatti classici',
-            6 ingredienti e 5 step. Usa l'immagine placeholder. Assicurati che appaia nel carousel."
-          </p>
-          <p className="text-sm leading-relaxed opacity-75 mt-2">
-            Poi verificherei: la card appare nel carousel, il modale si apre correttamente,
-            ingredienti e step sono visibili, il build non dà errori.
-          </p>
         </div>
       </div>
     ),
   },
 
-  // Slide 12 — Limiti e sviluppi futuri
+  // 22 — Limiti
   {
-    id: 12,
-    title: "Limiti, miglioramenti e sviluppi futuri",
+    id: 22,
+    title: "Limiti del progetto",
+    icon: Pencil,
+    theme: "light",
+    content: (
+      <div className="flex flex-col gap-4">
+        <div>
+          <h3 className="font-display text-base font-semibold mb-3 sm:text-lg">Cosa non è completo</h3>
+          <BulletList items={[
+            "Niente database: le ricette sono scritte nel codice",
+            "Niente login o area admin",
+            "Niente ricerca o filtro delle ricette",
+            "Le immagini sono PNG pesanti, non ottimizzate",
+          ]} />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {[
+            { a: "Sicurezza", d: "Niente input utente, quindi pochi rischi, ma niente protezioni configurate" },
+            { a: "Prestazioni", d: "Le librerie di animazione pesano ~80KB, potrebbero rallentare su telefoni vecchi" },
+            { a: "Grafica", d: "Le immagini sono PNG, non otimizzate per il web" },
+            { a: "Dati", d: "Per cambiare una ricetta devi modificare il codice" },
+          ].map((l, i) => (
+            <div key={i} className="rounded-xl border border-anthracite/10 bg-anthracite/5 p-3">
+              <h4 className="font-display text-xs font-semibold text-pasta-yellow mb-1 sm:text-sm">{l.a}</h4>
+              <p className="text-xs leading-relaxed opacity-70 sm:text-sm">{l.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+
+  // 23 — Miglioramenti futuri
+  {
+    id: 23,
+    title: "Cosa aggiungerei in futuro",
     icon: Pencil,
     theme: "dark",
     content: (
-      <div className="flex flex-col gap-5">
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Cosa non è completo</h3>
-          <BulletList items={[
-            "Niente database: le ricette sono hardcoded, non modificabili dall'utente",
-            "Niente sistema di autenticazione o area admin",
-            "Niente ricerca o filtro delle ricette per categoria",
-            "Le immagini sono file statici pesanti (PNG), non ottimizzate per il web moderno",
-          ]} />
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Limiti</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              { area: "Sicurezza", detail: "Niente input utente, quindi superficie di attacco minima, ma niente CSRF/protection headers configurati" },
-              { area: "Prestazioni", detail: "GSAP + anime.js + Lenis pesano ~80KB; alcune animazioni potrebbero causare jank su dispositivi low-end" },
-              { area: "Grafica", detail: "Le immagini sono PNG non ottimizzate; manca responsive art direction" },
-              { area: "Dati", detail: "I dati sono statici; cambiare una ricetta richiede di modificare il codice" },
-            ].map((l, i) => (
-              <div key={i} className="rounded-xl border border-cream/10 bg-cream/5 p-4">
-                <h4 className="font-display text-sm font-semibold text-pasta-yellow mb-1">{l.area}</h4>
-                <p className="text-sm leading-relaxed opacity-70">{l.detail}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h3 className="font-display text-lg font-semibold mb-3">Funzionalità che aggiungerei</h3>
-          <BulletList items={[
-            "Database Supabase per gestire le ricette dinamicamente con area admin",
-            "Sistema di login per un amministratore che può aggiungere/modificare ricette",
-            "Ricerca e filtro per categoria, tempo di preparazione, ingredienti",
-            "Form di contatto con salvataggio in database",
-            "Versione dark/light toggle persistente",
-            "Ottimizzazione immagini con next/image e formati WebP/AVIF",
-          ]} />
-        </div>
-        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-5">
-          <h3 className="font-display text-base font-semibold mb-2 text-basil-green">Cosa farei diversamente</h3>
-          <p className="text-sm leading-relaxed opacity-85">
-            Rifacendo il progetto, strutturerei i dati in Supabase fin dall'inizio per evitare
-            di dover migrare poi, e userei un CMS headless per i contenuti testuali.
-            Inoltre, progetterei prima il design system e poi i componenti, invece di iterare
-            componente per componente.
+      <div className="flex flex-col gap-4">
+        <BulletList items={[
+          "Database Supabase per gestire le ricette senza toccare il codice",
+          "Login per un admin che può aggiungere e modificare ricette",
+          "Ricerca e filtro per categoria, tempo e ingredienti",
+          "Form di contatto che salva i messaggi",
+          "Tema chiaro/scuro che si ricorda",
+          "Immagini più leggere con formati moderni (WebP)",
+        ]} />
+        <div className="rounded-2xl border border-basil-green/30 bg-basil-green/10 p-4">
+          <h3 className="font-display text-sm font-semibold mb-2 text-basil-green sm:text-base">Cosa farei diversamente</h3>
+          <p className="text-xs leading-relaxed opacity-85 sm:text-sm">
+            Rifacendolo, metterei il database dall'inizio per non dover migrare dopo,
+            e progetterei prima i colori e i font, poi i componenti.
           </p>
         </div>
       </div>
     ),
   },
 
-  // Slide 13 — Valutazione
+  // 24 — Valutazione
   {
-    id: 13,
-    title: "Come sarà valutato il progetto",
+    id: 24,
+    title: "Come viene valutato",
     icon: BarChart3,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
         <p className="text-sm leading-relaxed opacity-75 max-w-2xl">
-          La complessità tecnica da sola non determina il voto. Un progetto più semplice ma
-          pienamente compreso, testato e spiegato può essere valutato meglio di uno complesso
-          non compreso.
+          Un progetto più semplice ma capito bene vale più di uno complesso ma non capito.
         </p>
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b-2 border-anthracite/20">
-                <th className="py-3 pr-4 text-sm font-semibold uppercase tracking-wider">Area</th>
-                <th className="py-3 px-4 text-sm font-semibold uppercase tracking-wider">Peso</th>
-                <th className="py-3 pl-4 text-sm font-semibold uppercase tracking-wider">Cosa conta</th>
+                <th className="py-2 pr-4 text-xs font-semibold uppercase tracking-wider">Area</th>
+                <th className="py-2 px-4 text-xs font-semibold uppercase tracking-wider">Peso</th>
+                <th className="py-2 pl-4 text-xs font-semibold uppercase tracking-wider">Cosa conta</th>
               </tr>
             </thead>
             <tbody>
-              <EvalRow area="Idea, obiettivo e progettazione" weight="10%" what="Chiarezza e coerenza" />
-              <EvalRow area="Uso dell'AI e qualità dei prompt" weight="15%" what="Guidare e migliorare l'AI" />
-              <EvalRow area="Comprensione della struttura" weight="15%" what="Sapere cosa succede e perché" />
-              <EvalRow area="Database, tabelle, chiavi e relazioni" weight="15%" what="Comprensione dei dati" />
-              <EvalRow area="Comprensione del codice e tecnologie" weight="20%" what="Spiegare parti significative" />
-              <EvalRow area="Problem solving, test e correzione" weight="10%" what="Verificare e correggere" />
-              <EvalRow area="PowerPoint ed esposizione" weight="10%" what="Chiarezza, ordine, autonomia" />
-              <EvalRow area="Contributo personale e capacità critica" weight="5%" what="Scelte e riflessione" />
+              <EvalRow area="Idea e progettazione" weight="10%" what="Chiarezza" />
+              <EvalRow area="Uso dell'AI" weight="15%" what="Saper guidare l'AI" />
+              <EvalRow area="Comprensione della struttura" weight="15%" what="Sapere cosa succede" />
+              <EvalRow area="Database e dati" weight="15%" what="Capire i dati" />
+              <EvalRow area="Codice e tecnologie" weight="20%" what="Spiegare il codice" />
+              <EvalRow area="Test e correzione" weight="10%" what="Verificare e correggere" />
+              <EvalRow area="Presentazione" weight="10%" what="Chiarezza e ordine" />
+              <EvalRow area="Contributo personale" weight="5%" what="Scelte personali" />
             </tbody>
           </table>
         </div>
         <div className="text-right">
-          <span className="font-display text-2xl font-bold text-tomato-red">TOTALE 100%</span>
+          <span className="font-display text-xl font-bold text-tomato-red sm:text-2xl">TOTALE 100%</span>
         </div>
       </div>
     ),
   },
 
-  // Slide 14 — Checklist
+  // 25 — Checklist
   {
-    id: 14,
-    title: "Checklist prima della presentazione",
+    id: 25,
+    title: "Checklist prima di presentare",
     icon: CheckSquare,
     theme: "dark",
     content: (
-      <div className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 max-w-4xl">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 max-w-4xl">
         {[
-          "Ho spiegato chiaramente l'obiettivo del progetto",
-          "Ho inserito almeno 1-2 prompt significativi e so spiegarli",
-          "So indicare le tecnologie utilizzate e a cosa servono",
-          "Ho mostrato come sono organizzati i dati (tipo Recipe, slug come PK)",
-          "Ho inserito uno schema dei dati e delle relazioni",
-          "Ho scelto 2-3 parti di codice che so spiegare",
-          "Ho preparato un esempio di errore/problema e la sua soluzione",
-          "Ho verificato il progetto con alcuni test",
-          "Sono pronto a fare una dimostrazione pratica",
-          "So spiegare cosa ho deciso io e cosa ha prodotto l'AI",
-          "Sono pronto a descrivere limiti e miglioramenti",
-          "Le slide contengono testi brevi, schemi e diagrammi",
+          "Ho spiegato l'obiettivo del progetto",
+          "Ho messo 1-2 prompt e so spiegarli",
+          "So dire le tecnologie e a cosa servono",
+          "Ho mostrato come sono organizzati i dati",
+          "Ho messo uno schema dei dati",
+          "Ho scelto 2-3 pezzi di codice che so spiegare",
+          "Ho pronto un esempio di errore e soluzione",
+          "Ho testato il progetto",
+          "Sono pronto a fare la demo",
+          "So dire cosa ho fatto io e cosa l'AI",
+          "So dire limiti e miglioramenti",
+          "Le slide hanno testi brevi e schemi",
         ].map((item, i) => (
           <ChecklistItem key={i} label={item} />
         ))}
@@ -999,35 +941,35 @@ window.__lenis?.start()`}
     ),
   },
 
-  // Slide 15 — Closing
+  // 26 — Chiusura
   {
-    id: 15,
+    id: 26,
     title: "Ricorda",
     icon: Brain,
     theme: "light",
     content: (
-      <div className="flex flex-col gap-6 items-center justify-center text-center py-8">
+      <div className="flex flex-col gap-6 items-center justify-center text-center py-4">
         <div className="max-w-3xl">
-          <p className="font-display text-xl leading-relaxed sm:text-2xl opacity-90">
-            L'Intelligenza Artificiale è uno strumento di lavoro.
+          <p className="font-display text-lg leading-relaxed sm:text-2xl opacity-90">
+            L'AI è uno strumento di lavoro.
           </p>
-          <p className="font-display text-lg leading-relaxed mt-4 opacity-75 sm:text-xl">
-            Il valore del progetto sta anche nella tua capacità di fare domande efficaci,
-            controllare le risposte, comprendere ciò che è stato costruito e spiegare in modo
-            consapevole le scelte effettuate.
+          <p className="font-display text-base leading-relaxed mt-3 opacity-75 sm:text-xl">
+            Il valore del progetto sta nel saper fare le domande giuste,
+            controllare le risposte, capire cosa è stato costruito
+            e spiegare le scelte fatte.
           </p>
         </div>
-        <div className="mt-8 rounded-2xl border border-anthracite/10 bg-anthracite/5 px-8 py-6">
-          <p className="text-sm opacity-60">Progetto realizzato da</p>
-          <p className="font-display text-2xl font-bold mt-1">Davide Arduini</p>
-          <p className="text-xs opacity-50 mt-3">
-            Sito tributo non ufficiale, realizzato a scopo dimostrativo.<br />
-            Giovanni Rana è un marchio registrato dei rispettivi proprietari.
+        <div className="mt-6 rounded-2xl border border-anthracite/10 bg-anthracite/5 px-8 py-5">
+          <p className="text-xs opacity-60">Progetto fatto da</p>
+          <p className="font-display text-xl font-bold mt-1 sm:text-2xl">Davide Arduini</p>
+          <p className="text-xs opacity-50 mt-2">
+            Sito tributo non ufficiale, fatto per la scuola.<br />
+            Giovanni Rana è un marchio dei rispettivi proprietari.
           </p>
         </div>
         <a
           href="/"
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-tomato-red px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-anthracite"
+          className="mt-2 inline-flex items-center gap-2 rounded-full bg-tomato-red px-6 py-3 text-sm font-semibold text-cream transition-colors hover:bg-anthracite"
         >
           <Home className="h-4 w-4" />
           Torna al sito
