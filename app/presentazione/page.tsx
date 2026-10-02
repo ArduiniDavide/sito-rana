@@ -881,43 +881,4 @@ const SLIDES: Slide[] = [
     ),
   },
 
-  // 24 — Valutazione
-  {
-    id: 24,
-    title: "Come viene valutato",
-    icon: BarChart3,
-    theme: "light",
-    content: (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm leading-relaxed opacity-75 max-w-2xl">
-          Un progetto più semplice ma capito bene vale più di uno complesso ma non capito.
-        </p>
-        <div className="overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b-2 border-anthracite/20">
-                <th className="py-2 pr-4 text-xs font-semibold uppercase tracking-wider">Area</th>
-                <th className="py-2 px-4 text-xs font-semibold uppercase tracking-wider">Peso</th>
-                <th className="py-2 pl-4 text-xs font-semibold uppercase tracking-wider">Cosa conta</th>
-              </tr>
-            </thead>
-            <tbody>
-              <EvalRow area="Idea e progettazione" weight="10%" what="Chiarezza" />
-              <EvalRow area="Uso dell'AI" weight="15%" what="Saper guidare l'AI" />
-              <EvalRow area="Comprensione della struttura" weight="15%" what="Sapere cosa succede" />
-              <EvalRow area="Database e dati" weight="15%" what="Capire i dati" />
-              <EvalRow area="Codice e tecnologie" weight="20%" what="Spiegare il codice" />
-              <EvalRow area="Test e correzione" weight="10%" what="Verificare e correggere" />
-              <EvalRow area="Presentazione" weight="10%" what="Chiarezza e ordine" />
-              <EvalRow area="Contributo personale" weight="5%" what="Scelte personali" />
-            </tbody>
-          </table>
-        </div>
-        <div className="text-right">
-          <span className="font-display text-xl font-bold text-tomato-red sm:text-2xl">TOTALE 100%</span>
-        </div>
-      </div>
-    ),
-  },
-
 ]
